@@ -1,0 +1,11 @@
+{
+  "name": "metadata-generator",
+  "version": "1.0.0",
+  "description": "Utility to randomly select traits for metadata generation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
