@@ -105,13 +105,14 @@ contract LP404 is Ownable, ERC404 {
         }
 
         return string(abi.encodePacked(
-      'data:application/json;base64,', Base64.encode(bytes(abi.encodePacked(
-        '{',
-        '"name": "', tokenName, '", ',
-        '"description": "', description, '", ',
-        '"image": "', imageLink, '", ',
-        '"attributes": ', attrStr,
-        '}')))
+        'data:application/json;base64,', Base64.encode(bytes(abi.encodePacked(
+            '{',
+            '"name": "', tokenName, '", ',
+            '"description": "', description, '", ',
+            '"image": "', imageLink, '", ',
+            '"attributes": ', attrStr,
+            '}'
+        )))
       ));
     }
 
