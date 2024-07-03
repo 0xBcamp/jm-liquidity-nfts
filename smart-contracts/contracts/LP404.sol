@@ -50,10 +50,11 @@ contract LP404 is Ownable, ERC404 {
      * @dev Set the attributes and uniqueness of an ERC721
      * @notice Setting this to onlyOwner for now, but can be changed to a different modifier
      * @param _tokenId the id of the ERC721
-     * @param _values the attributes
-     * @param _traitTypes the trait types of the attributes
+     * @param _traitTypes Attribute Trait_Types
+     * @param _values Attribute Values
+     * @param _dna DNA hash of the ERC721
      */
-    function setAttributes(uint _tokenId, string[] memory _values, string[] memory _traitTypes, bytes32 _dna) 
+    function setAttributes(uint _tokenId, string[] calldata _traitTypes, string[] calldata _values, bytes32 _dna) 
     internal onlyOwner {
         // Validate array lengths and attribute uniqueness
         require(_values.length == _traitTypes.length, "Value and traitTypes length mismatch");
@@ -71,22 +72,17 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
-    /**
-     * @dev Gets the attributes of an ERC721
-     * @param _tokenId the id of the ERC721
-     */
+    /// @dev Gets the attributes of an NFT
     function getAttributes(uint _tokenId) external view returns (string[] memory) {
         return attributes[_tokenId].values;
     }
 
-    /**
-     * @dev Checks if the attributes are unique
-     * @param _dna the hash of the attributes
-     */
+    /// @dev Checks if the attributes are unique
     function checkUniqueness(bytes32 _dna) external view returns (bool) {
         return uniqueness[_dna];
     }
 
+    /// @dev Returns the URI for a token ID formatted for base64
     function tokenURI(uint256 _id) public view override returns (string memory) {
         require(circulating[_id], "NFT is not in circulation");
         string memory tokenName = string(abi.encodePacked('[LPNFT] ', name, ' #', Strings.toString(_id)));
@@ -100,8 +96,12 @@ contract LP404 is Ownable, ERC404 {
         string memory attrStr = '[';
 
         for (uint i = 0; i < attributes[_id].values.length; i++) {
-            attrStr = string.concat(attrStr, string(abi.encodePacked('{"',attributes[_id].traitTypes[i], '": "', attributes[_id].values[i], '"}')));
-            i == attributes[_id].values.length - 1 ? attrStr = string.concat(attrStr, ']') : attrStr = string.concat(attrStr, ',');
+            attrStr = string.concat(attrStr, string(abi.encodePacked(
+                '{"',attributes[_id].traitTypes[i], '": "', attributes[_id].values[i], '"}'
+            )));
+            i == attributes[_id].values.length - 1 
+                ? attrStr = string.concat(attrStr, ']') 
+                : attrStr = string.concat(attrStr, ',');
         }
 
         return string(abi.encodePacked(
