@@ -72,20 +72,25 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
-    /// @dev Gets the attributes of an NFT
+    /// @dev Checks if _tokenId has attributes set. 
+    function hasAttributes(uint _tokenId) external view returns (bool) {
+        return attributes[_tokenId].dna != bytes32(0);
+    }
+
+    /// @dev Returns the attributes of _tokenId
     function getAttributes(uint _tokenId) external view returns (string[] memory) {
         return attributes[_tokenId].values;
     }
 
-    /// @dev Checks if the attributes are unique
-    function checkUniqueness(bytes32 _dna) external view returns (bool) {
+    /// @dev Returns true if _dna has already been used. 
+    function usedDna(bytes32 _dna) external view returns (bool) {
         return uniqueness[_dna];
     }
 
     /// @dev Returns the URI for a token ID formatted for base64
     function tokenURI(uint256 _id) public view override returns (string memory) {
         require(circulating[_id], "NFT is not in circulation");
-        string memory tokenName = string(abi.encodePacked('[LPNFT] ', name, ' #', Strings.toString(_id)));
+        string memory tokenName = string(abi.encodePacked('[LP_NFT] ', name, ' #', Strings.toString(_id)));
         string memory imageLink = string(abi.encodePacked(
             uri, 
             Strings.toHexString(uint256(uint160(address(this))), 20), 
