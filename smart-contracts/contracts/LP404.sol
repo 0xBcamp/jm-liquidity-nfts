@@ -44,6 +44,19 @@ contract LP404 is Ownable, ERC404 {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Mint Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+    event _retrieveOrMintERC721(string traitTypes, string values, bytes32 dna);
+
+    function _retrieveOrMintERC721(attributes) internal{
+
+        uint256 tokenId = _mintNewToken(_owner); // Assuming _mintNewToken is a function that mints or retrieves a tokenId
+        circulating[tokenId] = true;
+        
+        // Emit the event with the necessary details
+        emit ERC721Minted(tokenId, _owner, address(this));
+        emit _retrieveOrMintERC721(attributes);
+
+    }
+
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
     /**
