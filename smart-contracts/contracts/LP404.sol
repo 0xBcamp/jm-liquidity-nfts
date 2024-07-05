@@ -86,9 +86,7 @@ contract LP404 is Ownable, ERC404 {
     }
 
     /// @dev Returns the attributes of _tokenId
-    function getAttributes(
-        uint _tokenId
-    ) external view returns (string[] memory) {
+    function getAttributes(uint _tokenId) external view returns (string[] memory) {
         return attributes[_tokenId].values;
     }
 
@@ -98,9 +96,7 @@ contract LP404 is Ownable, ERC404 {
     }
 
     /// @dev Returns the URI for a token ID formatted for base64
-    function tokenURI(
-        uint256 _id
-    ) public view override returns (string memory) {
+    function tokenURI(uint256 _id) public view override returns (string memory) {
         require(circulating[_id], "NFT is not in circulation");
         string memory tokenName = string(
             abi.encodePacked("[LP_NFT] ", name, " #", Strings.toString(_id))
@@ -117,48 +113,24 @@ contract LP404 is Ownable, ERC404 {
         string memory attrStr = "[";
 
         for (uint i = 0; i < attributes[_id].values.length; i++) {
-            attrStr = string.concat(
-                attrStr,
-                string(
-                    abi.encodePacked(
-                        '{"',
-                        attributes[_id].traitTypes[i],
-                        '": "',
-                        attributes[_id].values[i],
-                        '"}'
-                    )
-                )
-            );
+            attrStr = string.concat(attrStr, string(abi.encodePacked(
+                '{"', attributes[_id].traitTypes[i], '": "', attributes[_id].values[i],'"}'
+            )));
             i == attributes[_id].values.length - 1
                 ? attrStr = string.concat(attrStr, "]")
                 : attrStr = string.concat(attrStr, ",");
         }
 
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64.encode(
-                        bytes(
-                            abi.encodePacked(
-                                "{",
-                                '"name": "',
-                                tokenName,
-                                '", ',
-                                '"description": "',
-                                description,
-                                '", ',
-                                '"image": "',
-                                imageLink,
-                                '", ',
-                                '"attributes": ',
-                                attrStr,
-                                "}"
-                            )
-                        )
-                    )
-                )
-            );
+        return string(abi.encodePacked(
+            "data:application/json;base64,", Base64.encode(bytes(abi.encodePacked(
+                "{",
+                '"name": "', tokenName, '", ',
+                '"description": "', description, '", ',
+                '"image": "', imageLink, '", ',
+                '"attributes": ', attrStr,
+                "}"
+            )))
+        ));
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
