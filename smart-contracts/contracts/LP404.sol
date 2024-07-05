@@ -16,13 +16,17 @@ contract LP404 is Ownable, ERC404 {
     mapping(uint => Attributes) private attributes; // tokenId => Attributes of the ERC721s
     mapping(bytes32 => bool) private uniqueness; // dna => bool. Keeps track of the uniqueness of the attributes
     mapping(uint => bool) private circulating; // tokenId => bool. Keeps track of the circulating status of the ERC721s
+    mapping(address => bool) private admin; //Keeps track of addresses with admin privileges
 
-    string internal description = "I am a description";
+    string public traitCID;
+    string public description = "I am a description";
+    
     string internal uri = "nft-viewer.com/";
 
     /**
      * @param _name Token name
      * @param _symbol Token Symbol
+     * @param _traitCID CID for trait files. 
      * @param _decimals Decimals
      * @param _maxTotalSupplyERC721 Max suppy for NFT
      * @param _initialOwner Owner
@@ -31,6 +35,7 @@ contract LP404 is Ownable, ERC404 {
     constructor(
         string memory _name,
         string memory _symbol,
+        string memory _traitCID,
         uint8 _decimals,
         uint256 _maxTotalSupplyERC721,
         address _initialOwner,
@@ -39,23 +44,27 @@ contract LP404 is Ownable, ERC404 {
         // Do not mint the ERC721s to the initial owner, as it's a waste of gas.
         _setERC721TransferExempt(_initialMintRecipient, true);
         _mintERC20(_initialMintRecipient, _maxTotalSupplyERC721 * units);
+        traitCID = _traitCID;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
+    modifier onlyAdmin() {
+        require(admin[_msgSender()] = true, 'Only authorized user can call this function');
+        _;
+    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Mint Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
     /**
      * @dev Set the attributes and uniqueness of an ERC721
-     * @notice Setting this to onlyOwner for now, but can be changed to a different modifier
      * @param _tokenId the id of the ERC721
      * @param _traitTypes Attribute Trait_Types
      * @param _values Attribute Values
      * @param _dna DNA hash of the ERC721
      */
     function setAttributes(uint _tokenId, string[] calldata _traitTypes, string[] calldata _values, bytes32 _dna) 
-    internal onlyOwner {
+    external onlyAdmin {
         // Validate array lengths and attribute uniqueness
         require(_values.length == _traitTypes.length, "Value and traitTypes length mismatch");
         require(!uniqueness[_dna], "Attributes are not unique");
@@ -122,7 +131,11 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
-    function setERC721TransferExempt(address account_, bool value_) external onlyOwner {
+    function setERC721TransferExempt(address account_, bool value_) external onlyAdmin {
         _setERC721TransferExempt(account_, value_);
+    }
+
+    function setAdminPrivileges(address _admin, bool _state) public onlyOwner {
+        admin[_admin] = _state;
     }
 }
