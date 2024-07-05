@@ -7,6 +7,12 @@ import "@openzeppelin/contracts/utils/Base64.sol";
 import "erc404/contracts/ERC404.sol";
 
 contract LP404 is Ownable, ERC404 {
+    event MintedNeedsMetadata(
+        uint256 indexed tokenId, 
+        address indexed owner, 
+        address indexed collection
+    );
+    
     struct Attributes {
         string[] traitTypes;
         string[] values;
@@ -54,10 +60,19 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Mint Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function _retrieveOrMintERC721(address _to) internal override {
+        uint256 tokenId = getNextTokenId();
+        circulating[tokenId] = true;
+
+        super._retrieveOrMintERC721(_to);
+
+        emit MintedNeedsMetadata(tokenId, _to, address(this));
+    }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
     /**
      * @dev Set the attributes and uniqueness of an ERC721
+     * @notice This function should only be called by oracle
      * @param _tokenId the id of the ERC721
      * @param _traitTypes Attribute Trait_Types
      * @param _values Attribute Values
@@ -113,9 +128,11 @@ contract LP404 is Ownable, ERC404 {
     /// @dev Returns the URI for a token ID formatted for base64
     function tokenURI(uint256 _id) public view override returns (string memory) {
         require(circulating[_id], "NFT is not in circulation");
+
         string memory tokenName = string(
             abi.encodePacked("[LP_NFT] ", name, " #", Strings.toString(_id))
         );
+
         string memory imageLink = string(
             abi.encodePacked(
                 uri,
@@ -146,6 +163,17 @@ contract LP404 is Ownable, ERC404 {
                 "}"
             )))
         ));
+    }
+
+    /// @dev Returns the next tokenId to be used either from stored ids or the next id set to mint
+    function getNextTokenId() internal view  returns (uint tokenId) {
+        uint tokenIndex = getERC721QueueLength() - 1;
+        
+        if (getERC721QueueLength() > 0) {
+            return getERC721TokensInQueue(tokenIndex, 1)[0];
+        } else {
+            return minted + 1;
+        }
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
