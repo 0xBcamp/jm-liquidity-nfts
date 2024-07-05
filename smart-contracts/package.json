@@ -3,5 +3,9 @@
     "@openzeppelin/contracts": "^5.0.2",
     "ERC404": "github:Pandora-Labs-Org/erc404",
     "kim-core": "github:kim-protocol/kim-contracts"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.6"
   }
 }
