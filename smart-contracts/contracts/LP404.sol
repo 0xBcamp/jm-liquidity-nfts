@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import "erc404/contracts/ERC404.sol";
+import "ERC404/contracts/ERC404.sol";
 
 contract LP404 is Ownable, ERC404 {
     event MintedNeedsMetadata(
