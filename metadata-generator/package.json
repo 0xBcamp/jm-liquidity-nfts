@@ -2,16 +2,21 @@
   "name": "metadata-generator",
   "version": "1.0.0",
   "description": "Utility to randomly select traits for metadata generation",
-  "main": "index.js",
+  "main": "server.mjs",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@helia/core": "^0.0.0",
+    "@helia/verified-fetch": "^1.5.0",
     "crypto": "^1.0.1",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.1",
     "express": "^4.19.2",
-    "ipfs-http-client": "^60.0.1",
+    "helia": "^4.2.4",
     "web3": "^4.10.0"
   }
 }

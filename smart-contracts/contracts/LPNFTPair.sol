@@ -1,6 +1,10 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.6.5;
 
 import "kim-core/contracts/KimPair.sol";
 
-contract LPNFTFactory is KimPair {}
+abstract contract LPNFTFactory is KimPair {
+    constructor() public {
+        factory = msg.sender;
+    }
+}

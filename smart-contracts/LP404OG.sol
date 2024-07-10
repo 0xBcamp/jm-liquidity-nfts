@@ -1,13 +1,12 @@
-// SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {MetadataLibrary} from "./lib/OnChainMetadata.sol";
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 import "ERC404/contracts/ERC404.sol";
 
-contract LP404 is Ownable, ERC404 {
-    using MetadataLibrary for MetadataLibrary.Attribute[];
-
+contract LP404Copy is Ownable, ERC404 {
     error LengthMisMatch();
 
     event MintedNeedsMetadata(
@@ -28,22 +27,29 @@ contract LP404 is Ownable, ERC404 {
     mapping(address => bool) private admin; //Keeps track of addresses with admin privileges
 
     string public traitCID;
-    string public description = "I am a description";
+    string public description;
     
     string internal uri = "nft-viewer.com/";
 
+    /**
+     * @param _name Token name
+     * @param _symbol Token Symbol
+     * @param _traitCID CID for trait files. 
+     * @param _decimals Decimals
+     * @param _maxTotalSupplyERC721 Max suppy for NFT
+     * @param _initialOwner Owner
+     */
     constructor(
         string memory _name,
         string memory _symbol,
         string memory _traitCID,
-        string memeory _description,
         uint8 _decimals,
         uint256 _maxTotalSupplyERC721,
         address _initialOwner
     ) ERC404(_name, _symbol, _decimals) Ownable(_initialOwner) {
+        // Do not mint the ERC721s to the initial owner, as it's a waste of gas.
         _setERC721TransferExempt(_initialOwner, true);
         traitCID = _traitCID;
-        description = _description;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,12 +71,21 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    /**
+     * @dev Set the attributes and uniqueness of an ERC721
+     * @notice This function should only be called by oracle
+     * @param _tokenId the id of the ERC721
+     * @param _traitTypes Attribute Trait_Types
+     * @param _values Attribute Values
+     * @param _dna DNA hash of the ERC721
+     */
     function setAttributes(
         uint _tokenId, 
         string[] calldata _traitTypes, 
         string[] calldata _values, 
         bytes32 _dna
     ) external onlyAdmin {
+        // Validate array lengths and attribute uniqueness
         if (_values.length != _traitTypes.length) {
             revert LengthMisMatch();
         }
@@ -78,6 +93,7 @@ contract LP404 is Ownable, ERC404 {
             revert AlreadyExists();
         }
 
+        // Set the attributes
         Attributes memory newAttr = Attributes(_traitTypes, _values, _dna);
 
         attributes[_tokenId] = newAttr;
@@ -96,26 +112,64 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    /// @dev Checks if _tokenId has attributes set.
+    // function hasAttributes(uint _tokenId) external view returns (bool) {
+    //     return attributes[_tokenId].dna != bytes32(0);
+    // }
+
+    // /// @dev Returns the attributes of _tokenId
+    // function getAttributes(uint _tokenId) external view returns (string[] memory) {
+    //     return attributes[_tokenId].values;
+    // }
+
+    /// @dev Returns true if _dna has already been used.
+    // function usedDna(bytes32 _dna) external view returns (bool) {
+    //     return uniqueness[_dna];
+    // }
+
+    /// @dev Returns the URI for a token ID formatted for base64
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (!circulating[_id]) {
             revert InvalidTokenId();
         }
 
-        MetadataLibrary.Attribute[] memory attrs = new MetadataLibrary.Attribute[](attributes[_id].values.length);
+        string memory tokenName = string(
+            abi.encodePacked("[LP_NFT] ", name, " #", Strings.toString(_id))
+        );
+
+        string memory imageLink = string(
+            abi.encodePacked(
+                uri,
+                Strings.toHexString(uint256(uint160(address(this))), 20),
+                "/",
+                Strings.toString(_id)
+            )
+        );
+
+        string memory attrStr = "[";
+
         for (uint i = 0; i < attributes[_id].values.length; i++) {
-            attrs[i] = MetadataLibrary.Attribute(attributes[_id].traitTypes[i], attributes[_id].values[i]);
+            attrStr = string.concat(attrStr, string(abi.encodePacked(
+                '{"', attributes[_id].traitTypes[i], '": "', attributes[_id].values[i],'"}'
+            )));
+            i == attributes[_id].values.length - 1
+                ? attrStr = string.concat(attrStr, "]")
+                : attrStr = string.concat(attrStr, ",");
         }
 
-        return MetadataLibrary.buildTokenURI(
-            _id,
-            name,
-            description,
-            uri,
-            address(this),
-            attrs
-        );
+        return string(abi.encodePacked(
+            "data:application/json;base64,", Base64.encode(bytes(abi.encodePacked(
+                "{",
+                '"name": "', tokenName, '", ',
+                '"description": "', description, '", ',
+                '"image": "', imageLink, '", ',
+                '"attributes": ', attrStr,
+                "}"
+            )))
+        ));
     }
 
+    /// @dev Returns the next tokenId to be used either from stored ids or the next id set to mint
     function getNextTokenId() internal view  returns (uint tokenId) {
         uint tokenIndex = getERC721QueueLength();
         
