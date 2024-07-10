@@ -34,4 +34,29 @@ contract LPNFTPair is KimPair, LP404 {
         // Call KimPair's initialize function
         super.initialize(_token0, _token1);
     }
+
+    function setMetadata(
+        string memory _name,
+        string memory _symbol,
+        string memory _traitCID,
+        uint8 _decimals,
+        uint256 _maxTotalSupplyERC721,
+        address _initialOwner,
+        address _initialMintRecipient,
+        string memory _description,
+        string memory _uri
+    ) external {
+        require(msg.sender == factory, "LPNFTPair: FORBIDDEN");
+        
+        name = _name;
+        symbol = _symbol;
+        traitCID = _traitCID;
+        decimals = _decimals;
+        maxTotalSupplyERC721 = _maxTotalSupplyERC721;
+        initialOwner = _initialOwner;
+        initialMintRecipient = _initialMintRecipient;
+        description = _description;
+        uri = _uri;
+    }
+
 }
