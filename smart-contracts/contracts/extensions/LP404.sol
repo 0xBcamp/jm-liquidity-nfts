@@ -10,6 +10,7 @@ contract LP404 is Ownable, ERC404 {
 
     error LengthMisMatch();
 
+    // @Ricky, move this to factory contract
     event MintedNeedsMetadata(
         uint256 indexed tokenId, 
         address indexed owner, 
@@ -27,6 +28,8 @@ contract LP404 is Ownable, ERC404 {
     mapping(uint => bool) private circulating; // tokenId => bool. Keeps track of the circulating status of the ERC721s
     mapping(address => bool) private admin; //Keeps track of addresses with admin privileges
 
+    address public factory;
+
     string public traitCID;
     string public description = "I am a description";
     
@@ -36,14 +39,15 @@ contract LP404 is Ownable, ERC404 {
         string memory _name,
         string memory _symbol,
         string memory _traitCID,
-        string memeory _description,
+        string memory _description,
         uint8 _decimals,
-        uint256 _maxTotalSupplyERC721,
-        address _initialOwner
+        address _initialOwner,
+        address _factory
     ) ERC404(_name, _symbol, _decimals) Ownable(_initialOwner) {
         _setERC721TransferExempt(_initialOwner, true);
         traitCID = _traitCID;
         description = _description;
+        factory = _factory;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,6 +69,11 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function setCollectionInfo(string calldata _traitCID, string calldata _description) external onlyOwner {
+        traitCID = _traitCID;
+        description = _description;
+    }
+
     function setAttributes(
         uint _tokenId, 
         string[] calldata _traitTypes, 
