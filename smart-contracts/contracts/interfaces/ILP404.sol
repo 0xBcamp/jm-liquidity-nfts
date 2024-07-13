@@ -18,7 +18,6 @@ interface ILP404 {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setERC721TransferExempt(address account_, bool value_) external;
 
-    function setAdminPrivileges(address _admin, bool _state) external;
 
    
 }
