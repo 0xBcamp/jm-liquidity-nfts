@@ -5,6 +5,7 @@ import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/ILP404Factory.sol";
 import "./LPNFTPair.sol";
+import "./extensions/LP404.sol";
 
 contract KimLPNFTFactory is IKimFactory {
     address public override owner;
@@ -104,6 +105,10 @@ contract KimLPNFTFactory is IKimFactory {
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
+
+        // Add Pair to LP404 admin List
+        LP404(lp404).setAdminPrivileges(pair, true);
+
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
