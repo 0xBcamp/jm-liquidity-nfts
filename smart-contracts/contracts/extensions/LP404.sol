@@ -147,14 +147,9 @@ contract LP404 is Ownable, ERC404 {
     // Function that allows external Pair Contract to burn tokens
     function burnERC20(
         address _from,
-        address _to,
         uint256 _value
     ) public onlyAdmin {
-        // Check if the _from address is the zero address
-        if (_from != address(0)) {
-            revert InvalidRecipient();
-        }
-        _transferERC20WithERC721(_from, _to, _value);
+        _transferERC20WithERC721(_from, address(0), _value);
     }
 
     function _withdrawAndStoreERC721(address _from) internal override {

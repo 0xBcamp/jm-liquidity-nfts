@@ -265,7 +265,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             "KimPair: INSUFFICIENT_LIQUIDITY_BURNED"
         );
         // Burn on LP404 instead of UniswapV2ERC20
-        LP404(lp404).burnERC20(address(this), to, liquidity);
+        LP404(lp404).burnERC20(address(this), liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
