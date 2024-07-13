@@ -8,6 +8,7 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/IUniswapV2Callee.sol";
+import "./extensions/LP404.sol";
 
 contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
     using SafeMath for uint;
@@ -263,7 +264,8 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             amount0 > 0 && amount1 > 0,
             "KimPair: INSUFFICIENT_LIQUIDITY_BURNED"
         );
-        _burn(address(this), liquidity);
+        // Burn on LP404 instead of UniswapV2ERC20
+        LP404(lp404).burnERC20(address(this), to, liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
