@@ -8,6 +8,7 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/IUniswapV2Callee.sol";
+import "./interfaces/ILP404.sol";
 
 contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
     using SafeMath for uint;
@@ -205,7 +206,8 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
                     );
                     uint denominator = rootK.mul(d).add(rootKLast.mul(100));
                     uint liquidity = numerator / denominator;
-                    if (liquidity > 0) _mint(feeTo, liquidity);
+                    ILP404 lp404Instance = ILP404(lp404);
+                    if (liquidity > 0) lp404Instance.mintERC20(feeTo, liquidity);
                 }
             }
         } else if (_kLast != 0) {
@@ -224,10 +226,11 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply;
+        ILP404 lp404Instance = ILP404(lp404);
         // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-            _mint(address(0), MINIMUM_LIQUIDITY);
+            lp404Instance.mintERC20(address(0), MINIMUM_LIQUIDITY);
             // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
             liquidity = Math.min(
@@ -236,7 +239,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             );
         }
         require(liquidity > 0, "KimPair: INSUFFICIENT_LIQUIDITY_MINTED");
-        _mint(to, liquidity);
+        lp404Instance.mintERC20(to, liquidity);
 
         _update(balance0, balance1);
         if (feeOn) kLast = _k(uint(reserve0), uint(reserve1));
