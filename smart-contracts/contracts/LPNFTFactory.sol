@@ -102,12 +102,10 @@ contract KimLPNFTFactory is IKimFactory {
         }
         require(pair != address(0), "KimFactory: FAILED");
         KimLPNFTPair(pair).initialize(token0, token1);
+        ILP404(lp404).setPair(pair);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
-
-        // Add Pair to LP404 admin List
-        ILP404(lp404).setAdminPrivileges(pair, true);
 
         emit PairCreated(token0, token1, pair, allPairs.length);
     }

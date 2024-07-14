@@ -3,19 +3,13 @@ pragma solidity ^0.8.20;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MetadataLibrary} from "./lib/OnChainMetadata.sol";
+import "./LP404Factory.sol";
 import "ERC404/contracts/ERC404.sol";
 
 contract LP404 is Ownable, ERC404 {
     using MetadataLibrary for MetadataLibrary.Attribute[];
 
     error LengthMisMatch();
-
-    // @Ricky, move this to factory contract
-    event MintedNeedsMetadata(
-        uint256 indexed tokenId, 
-        address indexed owner, 
-        address indexed collection
-    );
     
     struct Attributes {
         string[] traitTypes;
@@ -29,6 +23,7 @@ contract LP404 is Ownable, ERC404 {
     mapping(address => bool) private admin; //Keeps track of addresses with admin privileges
 
     address public factory;
+    address public pairContract;
 
     string public traitCID;
     string public description = "I am a description";
@@ -48,6 +43,7 @@ contract LP404 is Ownable, ERC404 {
         traitCID = _traitCID;
         description = _description;
         factory = _factory;
+        admin[_factory] = true;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,7 +61,7 @@ contract LP404 is Ownable, ERC404 {
 
         super._retrieveOrMintERC721(_to);
 
-        emit MintedNeedsMetadata(tokenId, _to, address(this));
+        LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
     }
 
     function mintERC20(address to, uint256 amount) external onlyAdmin {
@@ -73,7 +69,7 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
-    function setCollectionInfo(string calldata _traitCID, string calldata _description) external onlyOwner {
+    function setCollectionInfo(string calldata _traitCID, string calldata _description) external onlyAdmin {
         traitCID = _traitCID;
         description = _description;
     }
@@ -146,6 +142,11 @@ contract LP404 is Ownable, ERC404 {
 
     function setAdminPrivileges(address _admin, bool _state) public onlyOwner {
         admin[_admin] = _state;
+    }
+
+    function setPair(address _pair) external onlyOwner {
+        pairContract = _pair;
+        setAdminPrivileges(_pair, true);
     }
 
     // Function that allows external Pair Contract to burn tokens

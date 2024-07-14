@@ -6,6 +6,12 @@ import "./LP404.sol";
 contract LP404Factory {
     event LP404Created(address indexed creator, address lp404);
 
+    event NeedsMetadata(
+        uint256 indexed tokenId,
+        address indexed owner,
+        address indexed collection
+    );
+
     function createLP404(
         string calldata _name,
         string calldata _symbol,
@@ -24,5 +30,13 @@ contract LP404Factory {
         require(lp404 != address(0), "LP404Factory: CREATION_FAILED");
         emit LP404Created(owner, lp404);
         return lp404;
+    }
+
+    function generateMetadata(
+        uint256 tokenId,
+        address owner,
+        address collection
+    ) external {
+        emit NeedsMetadata(tokenId, owner, collection);
     }
 }

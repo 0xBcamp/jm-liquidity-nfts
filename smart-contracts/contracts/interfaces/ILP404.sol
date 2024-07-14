@@ -17,6 +17,8 @@ interface ILP404 {
         bytes32 _dna
     ) external;
 
+    function setPair(address _pair) external;
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setERC721TransferExempt(address account_, bool value_) external;
     function setAdminPrivileges(address _admin, bool _state) external;
