@@ -68,7 +68,7 @@ contract LP404 is Ownable, ERC404 {
         emit MintedNeedsMetadata(tokenId, _to, address(this));
     }
 
-    function mintERC20(address to, uint256 amount) external onlyAdmin  {
+    function mintERC20(address to, uint256 amount) external onlyAdmin {
         _mintERC20(to, amount);
     }
 

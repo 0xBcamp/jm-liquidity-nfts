@@ -206,8 +206,8 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
                     );
                     uint denominator = rootK.mul(d).add(rootKLast.mul(100));
                     uint liquidity = numerator / denominator;
-                    ILP404 lp404Instance = ILP404(lp404);
-                    if (liquidity > 0) lp404Instance.mintERC20(feeTo, liquidity);
+                    // ILP404 lp404Instance = ILP404(lp404);
+                    if (liquidity > 0) ILP404(lp404).mintERC20(feeTo, liquidity);
                 }
             }
         } else if (_kLast != 0) {
@@ -226,11 +226,11 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = totalSupply;
-        ILP404 lp404Instance = ILP404(lp404);
+        // ILP404 lp404Instance = ILP404(lp404);
         // gas savings, must be defined here since totalSupply can update in _mintFee
         if (_totalSupply == 0) {
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-            lp404Instance.mintERC20(address(0), MINIMUM_LIQUIDITY);
+            ILP404(lp404).mintERC20(address(0), MINIMUM_LIQUIDITY);
             // permanently lock the first MINIMUM_LIQUIDITY tokens
         } else {
             liquidity = Math.min(
@@ -239,7 +239,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             );
         }
         require(liquidity > 0, "KimPair: INSUFFICIENT_LIQUIDITY_MINTED");
-        lp404Instance.mintERC20(to, liquidity);
+        ILP404(lp404).mintERC20(to, liquidity);
 
         _update(balance0, balance1);
         if (feeOn) kLast = _k(uint(reserve0), uint(reserve1));
@@ -267,7 +267,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             "KimPair: INSUFFICIENT_LIQUIDITY_BURNED"
         );
         // Burn on LP404 instead of UniswapV2ERC20
-        LP404(lp404).burnERC20(address(this), liquidity);
+        ILP404(lp404).burnERC20(address(this), liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));

@@ -4,6 +4,7 @@ pragma solidity ^0.6.5;
 import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/ILP404Factory.sol";
+import "./interfaces/ILP404.sol";
 import "./LPNFTPair.sol";
 
 contract KimLPNFTFactory is IKimFactory {
@@ -106,7 +107,7 @@ contract KimLPNFTFactory is IKimFactory {
         allPairs.push(pair);
 
         // Add Pair to LP404 admin List
-        LP404(lp404).setAdminPrivileges(pair, true);
+        ILP404(lp404).setAdminPrivileges(pair, true);
 
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
