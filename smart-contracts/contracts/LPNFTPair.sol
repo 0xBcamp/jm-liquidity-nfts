@@ -8,7 +8,6 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/IUniswapV2Callee.sol";
-import "./extensions/LP404.sol";
 
 contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
     using SafeMath for uint;

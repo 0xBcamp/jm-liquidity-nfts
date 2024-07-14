@@ -5,7 +5,6 @@ import "./interfaces/IFeeSharing.sol";
 import "./interfaces/IKimFactory.sol";
 import "./interfaces/ILP404Factory.sol";
 import "./LPNFTPair.sol";
-import "./extensions/LP404.sol";
 
 contract KimLPNFTFactory is IKimFactory {
     address public override owner;
