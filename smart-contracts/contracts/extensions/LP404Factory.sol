@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./LP404.sol";
+import "./lib/OnChainMetadata.sol";
 
 contract LP404Factory {
     event LP404Created(address indexed creator, address lp404);
@@ -20,8 +21,19 @@ contract LP404Factory {
         uint8 _decimals,
         address owner
     ) external returns (address) {
-        bytes memory constructorArgs = abi.encode(_name, _symbol, _traitCID, _description, _decimals, owner, msg.sender);
-        bytes memory bytecode = abi.encodePacked(type(LP404).creationCode, constructorArgs);
+        bytes memory constructorArgs = abi.encode(
+            _name,
+            _symbol,
+            _traitCID,
+            _description,
+            _decimals,
+            owner,
+            msg.sender
+        );
+        bytes memory bytecode = abi.encodePacked(
+            type(LP404).creationCode,
+            constructorArgs
+        );
         bytes32 salt = keccak256(abi.encodePacked(constructorArgs));
         address lp404;
         assembly {
