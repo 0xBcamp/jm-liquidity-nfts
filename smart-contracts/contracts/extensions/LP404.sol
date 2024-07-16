@@ -140,11 +140,11 @@ contract LP404 is Ownable, ERC404 {
         _setERC721TransferExempt(account_, value_);
     }
 
-    function setAdminPrivileges(address _admin, bool _state) public onlyOwner {
+    function setAdminPrivileges(address _admin, bool _state) public onlyAdmin {
         admin[_admin] = _state;
     }
 
-    function setPair(address _pair) external onlyOwner {
+    function setPair(address _pair) external onlyAdmin {
         pairContract = _pair;
         setAdminPrivileges(_pair, true);
     }
