@@ -6,6 +6,7 @@ interface IKimFactory {
         address indexed token0,
         address indexed token1,
         address pair,
+        address lp404,
         uint256
     );
 
