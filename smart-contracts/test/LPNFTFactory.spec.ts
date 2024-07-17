@@ -1,5 +1,5 @@
-import chai, { expect } from "chai";
-import { Contract, Wallet } from "ethers";
+import { expect } from "chai";
+import { Contract } from "ethers";
 import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
