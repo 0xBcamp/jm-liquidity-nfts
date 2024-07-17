@@ -69,7 +69,7 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         return true;
     }
 
-    function transfer(address to, uint value) external override returns (bool) {
+    function transfer(address to, uint value) external virtual returns (bool) {
         _transfer(msg.sender, to, value);
         return true;
     }

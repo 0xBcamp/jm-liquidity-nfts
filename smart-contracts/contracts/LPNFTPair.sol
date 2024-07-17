@@ -247,6 +247,12 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         emit Mint(msg.sender, amount0, amount1);
     }
 
+    // This is so that we can transfer LP404 tokens
+    function transfer(address to, uint value) external override returns (bool) {
+        ILP404(lp404).transferFrom(msg.sender, to, value);
+        return true;
+    }
+
     // this low-level function should be called from a contract which performs important safety checks
     function burn(
         address to
