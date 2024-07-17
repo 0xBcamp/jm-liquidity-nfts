@@ -117,6 +117,7 @@ contract KimLPNFTFactory is IKimFactory {
     }
 
     function setFeePercentOwner(address _feePercentOwner) external onlyOwner {
+	// Should this be onlyOwner or onlyFeePercentOwner?
         require(_feePercentOwner != address(0), "KimFactory: zero address");
         emit FeePercentOwnershipTransferred(feePercentOwner, _feePercentOwner);
         feePercentOwner = _feePercentOwner;
