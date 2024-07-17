@@ -44,17 +44,17 @@ contract KimLPNFTFactory is IKimFactory {
         uint referrerFeeShare
     );
 
-    constructor(address feeTo_, address _lp404Factory) public {
+    constructor(address _feeTo, address _lp404Factory) public {
         owner = msg.sender;
         feePercentOwner = msg.sender;
         setStableOwner = msg.sender;
-        feeTo = feeTo_;
+        feeTo = _feeTo;
         lp404Factory = _lp404Factory;
 
         emit OwnershipTransferred(address(0), msg.sender);
         emit FeePercentOwnershipTransferred(address(0), msg.sender);
         emit SetStableOwnershipTransferred(address(0), msg.sender);
-        emit FeeToTransferred(address(0), feeTo_);
+        emit FeeToTransferred(address(0), _feeTo);
     }
 
     /**
