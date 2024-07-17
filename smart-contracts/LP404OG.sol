@@ -4,9 +4,11 @@ pragma solidity ^0.8.20;
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
-import "erc404/contracts/ERC404.sol";
+import "ERC404/contracts/ERC404.sol";
 
-contract LP404 is Ownable, ERC404 {
+contract LP404Copy is Ownable, ERC404 {
+    error LengthMisMatch();
+
     event MintedNeedsMetadata(
         uint256 indexed tokenId, 
         address indexed owner, 
@@ -19,13 +21,13 @@ contract LP404 is Ownable, ERC404 {
         bytes32 dna;
     }
 
-    mapping(uint => Attributes) private attributes; // tokenId => Attributes of the ERC721s
-    mapping(bytes32 => bool) private uniqueness; // dna => bool. Keeps track of the uniqueness of the attributes
+    mapping(uint => Attributes) public attributes; // tokenId => Attributes of the ERC721s
+    mapping(bytes32 => bool) public uniqueness; // dna => bool. Keeps track of the uniqueness of the attributes
     mapping(uint => bool) private circulating; // tokenId => bool. Keeps track of the circulating status of the ERC721s
     mapping(address => bool) private admin; //Keeps track of addresses with admin privileges
 
     string public traitCID;
-    string public description = "I am a description";
+    string public description;
     
     string internal uri = "nft-viewer.com/";
 
@@ -36,7 +38,6 @@ contract LP404 is Ownable, ERC404 {
      * @param _decimals Decimals
      * @param _maxTotalSupplyERC721 Max suppy for NFT
      * @param _initialOwner Owner
-     * @param _initialMintRecipient Transfer Exemption
      */
     constructor(
         string memory _name,
@@ -44,18 +45,18 @@ contract LP404 is Ownable, ERC404 {
         string memory _traitCID,
         uint8 _decimals,
         uint256 _maxTotalSupplyERC721,
-        address _initialOwner,
-        address _initialMintRecipient
+        address _initialOwner
     ) ERC404(_name, _symbol, _decimals) Ownable(_initialOwner) {
         // Do not mint the ERC721s to the initial owner, as it's a waste of gas.
-        _setERC721TransferExempt(_initialMintRecipient, true);
-        _mintERC20(_initialMintRecipient, _maxTotalSupplyERC721 * units);
+        _setERC721TransferExempt(_initialOwner, true);
         traitCID = _traitCID;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
     modifier onlyAdmin() {
-        require(admin[_msgSender()] = true, 'Only authorized user can call this function');
+        if (!admin[_msgSender()]) {
+            revert Unauthorized();
+        }
         _;
     }
 
@@ -85,11 +86,12 @@ contract LP404 is Ownable, ERC404 {
         bytes32 _dna
     ) external onlyAdmin {
         // Validate array lengths and attribute uniqueness
-        require(
-            _values.length == _traitTypes.length,
-            "Value and traitTypes length mismatch"
-        );
-        require(!uniqueness[_dna], "Attributes are not unique");
+        if (_values.length != _traitTypes.length) {
+            revert LengthMisMatch();
+        }
+        if (uniqueness[_dna]) {
+            revert AlreadyExists();
+        }
 
         // Set the attributes
         Attributes memory newAttr = Attributes(_traitTypes, _values, _dna);
@@ -111,23 +113,25 @@ contract LP404 is Ownable, ERC404 {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
     /// @dev Checks if _tokenId has attributes set.
-    function hasAttributes(uint _tokenId) external view returns (bool) {
-        return attributes[_tokenId].dna != bytes32(0);
-    }
+    // function hasAttributes(uint _tokenId) external view returns (bool) {
+    //     return attributes[_tokenId].dna != bytes32(0);
+    // }
 
-    /// @dev Returns the attributes of _tokenId
-    function getAttributes(uint _tokenId) external view returns (string[] memory) {
-        return attributes[_tokenId].values;
-    }
+    // /// @dev Returns the attributes of _tokenId
+    // function getAttributes(uint _tokenId) external view returns (string[] memory) {
+    //     return attributes[_tokenId].values;
+    // }
 
     /// @dev Returns true if _dna has already been used.
-    function usedDna(bytes32 _dna) external view returns (bool) {
-        return uniqueness[_dna];
-    }
+    // function usedDna(bytes32 _dna) external view returns (bool) {
+    //     return uniqueness[_dna];
+    // }
 
     /// @dev Returns the URI for a token ID formatted for base64
     function tokenURI(uint256 _id) public view override returns (string memory) {
-        require(circulating[_id], "NFT is not in circulation");
+        if (!circulating[_id]) {
+            revert InvalidTokenId();
+        }
 
         string memory tokenName = string(
             abi.encodePacked("[LP_NFT] ", name, " #", Strings.toString(_id))
@@ -167,10 +171,10 @@ contract LP404 is Ownable, ERC404 {
 
     /// @dev Returns the next tokenId to be used either from stored ids or the next id set to mint
     function getNextTokenId() internal view  returns (uint tokenId) {
-        uint tokenIndex = getERC721QueueLength() - 1;
+        uint tokenIndex = getERC721QueueLength();
         
-        if (getERC721QueueLength() > 0) {
-            return getERC721TokensInQueue(tokenIndex, 1)[0];
+        if (tokenIndex > 0) {
+            return getERC721TokensInQueue(tokenIndex - 1, 1)[0];
         } else {
             return minted + 1;
         }

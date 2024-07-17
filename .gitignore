@@ -1,3 +1,4 @@
 
 /smart-contracts/node_modules
 /metadata-generator/node_modules
+metadata-generator/.env
