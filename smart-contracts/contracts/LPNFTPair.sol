@@ -248,7 +248,10 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
     }
 
     // This is so that we can transfer LP404 tokens
-    function transfer(address to, uint value) external override returns (bool) {
+    function transfer(
+        address to,
+        uint value
+    ) external override(UniswapV2ERC20, IUniswapV2ERC20) returns (bool) {
         ILP404(lp404).transferFrom(msg.sender, to, value);
         return true;
     }

@@ -4,6 +4,7 @@ import hre from "hardhat";
 import { expandTo18Decimals } from "./utilities";
 
 import { abi as kimPairAbi } from "../../artifacts/contracts/LPNFTPair.sol/KimLPNFTPair.json";
+import { abi as lp404Abi } from "../../artifacts/contracts/extensions/LP404.sol/LP404.json";
 
 export interface FactoryFixture {
   factory: Contract | any;
@@ -48,6 +49,7 @@ interface PairFixture extends FactoryFixture {
   token0: Contract;
   token1: Contract;
   pair: Contract;
+  lp404: Contract;
 }
 
 export async function pairFixture(): Promise<PairFixture> {
@@ -78,10 +80,11 @@ export async function pairFixture(): Promise<PairFixture> {
     await tokenB.getAddress()
   );
   const pair = new Contract(pairAddress, kimPairAbi, wallet);
+  const lp404 = new Contract(await pair.lp404(), lp404Abi, wallet);
 
   const token0Address = await (pair.connect(wallet) as Contract).token0();
   const token0 = tokenA.address === token0Address ? tokenA : tokenB;
   const token1 = tokenA.address === token0Address ? tokenB : tokenA;
 
-  return { factory, tokenA, tokenB, token0, token1, pair };
+  return { factory, tokenA, tokenB, token0, token1, pair, lp404 };
 }

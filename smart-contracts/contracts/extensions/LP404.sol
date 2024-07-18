@@ -54,6 +54,24 @@ contract LP404 is Ownable, ERC404 {
         _;
     }
 
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~ Transfer Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Added check to prevent transfers from unauthorized addresses
+    // I was getting an arithmetic error, where the erc20TransferFrom function was trying to subtract
+    // value from the allowed variable when its value is 0, which causeed overflow.
+    // See erc20TransferFrom function in ERC404.sol on line 295
+    function erc20TransferFrom(
+        address from_,
+        address to_,
+        uint256 value_
+    ) public virtual override returns (bool) {
+        // Check that the operator has allowance.
+        if (allowance[from_][msg.sender] == 0) {
+            revert InsufficientAllowance();
+        }
+
+        return super.erc20TransferFrom(from_, to_, value_);
+    }
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Mint Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function _retrieveOrMintERC721(address _to) internal override {
         uint256 tokenId = getNextTokenId();
