@@ -78,6 +78,7 @@ contract LP404 is Ownable, ERC404 {
         description = _description;
     }
 
+
     function setAttributes(
         uint _tokenId, 
         string[] calldata _traitTypes, 
@@ -109,6 +110,12 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function getTokenAttributes(uint tokenId) external view returns (string[] memory, string[] memory, bytes32) {
+        return (attributes[tokenId].traitTypes, attributes[tokenId].values, attributes[tokenId].dna);
+    }
+
+
     function tokenURI(uint256 _id) public view override returns (string memory) {
         if (!circulating[_id]) {
             revert InvalidTokenId();
@@ -129,6 +136,8 @@ contract LP404 is Ownable, ERC404 {
         );
     }
 
+
+    
     function getNextTokenId() internal view  returns (uint tokenId) {
         uint tokenIndex = getERC721QueueLength();
         
