@@ -15,6 +15,9 @@ interface ILP404 {
         bytes32 _dna
     ) external;
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Getter ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function getTokenAttributes(uint tokenId) external;
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setERC721TransferExempt(address account_, bool value_) external;
 
