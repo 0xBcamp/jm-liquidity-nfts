@@ -1,4 +1,5 @@
-const crypto = require('crypto');
+// const crypto = require('crypto');
+import crypto from 'crypto';
 
 function generateTraits(layers) {
   /**
@@ -35,4 +36,5 @@ function generateTraits(layers) {
   return { traitTypes, values, dna };
 }
 
-module.exports = generateTraits;
+// module.exports = generateTraits;
+export default generateTraits;

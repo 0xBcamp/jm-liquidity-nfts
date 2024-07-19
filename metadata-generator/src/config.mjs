@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import { ethers } from 'ethers';
 import { createHelia } from 'helia';
 import { verifiedFetch } from '@helia/verified-fetch';
-import abi from '../../smart-contracts/artifacts/contracts/LPNFTFactory.sol/LPNFTFactory.json' assert { type: 'json' };
+import abi from '../../smart-contracts/artifacts/contracts/extensions/LP404Factory.sol/LP404Factory.json' assert { type: 'json' };
 
 // Load environment variables
 config();

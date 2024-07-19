@@ -6,8 +6,9 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Listen for events
-contract.on('NeedsMetadata', async (contractAddress, tokenId) => {
-  await processEvent(contractAddress, tokenId);
+contract.on('NeedsMetadata', async (tokenId, owner, contractAddress, ) => {
+  console.log(`NeedsMetadata event received for token ${tokenId} at contract ${contractAddress}`);
+  // await processEvent(contractAddress, tokenId);
 });
 
 app.listen(port, () => {
