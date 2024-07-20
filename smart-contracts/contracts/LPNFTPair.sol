@@ -230,7 +230,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         if (_totalSupply == 0) {
             // Im not sure this logic to permanently lock the first MINIMUM_LIQUIDITY tokens is needed - Muriuki
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-            _mint(address(this), MINIMUM_LIQUIDITY);
+            _mint(address(factory), MINIMUM_LIQUIDITY); // This is just to add Min Liquidity to the totalSupply value in LP404
         } else {
             liquidity = Math.min(
                 amount0.mul(_totalSupply) / _reserve0,
@@ -252,6 +252,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         uint value
     ) external override(UniswapV2ERC20, IUniswapV2ERC20) returns (bool) {
         ILP404(lp404).transferFrom(msg.sender, to, value);
+        balanceOf[msg.sender] = ILP404(lp404).erc20BalanceOf(msg.sender);
         return true;
     }
 
@@ -264,7 +265,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         address _token1 = token1; // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        uint liquidity = balanceOf[address(this)];
+        uint liquidity = ILP404(lp404).erc20BalanceOf(address(this));
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = ILP404(lp404).erc20TotalSupply(); // gas savings, must be defined here since totalSupply can update in _mintFee
