@@ -1,10 +1,10 @@
-import { Contract } from "ethers";
+import { computeAddress, Contract } from "ethers";
 import hre from "hardhat";
 
 import { expandTo18Decimals } from "./utilities";
 
-import { abi as kimPairAbi } from "../../artifacts/contracts/LPNFTPair.sol/KimLPNFTPair.json";
-import { abi as lp404Abi } from "../../artifacts/contracts/extensions/LP404.sol/LP404.json";
+import { abi as LPNFTPairAbi } from "../../artifacts/contracts/LPNFTPair.sol/KimLPNFTPair.json";
+import { abi as LP404Abi } from "../../artifacts/contracts/extensions/LP404.sol/LP404.json";
 
 export interface FactoryFixture {
   factory: Contract | any;
@@ -37,10 +37,10 @@ export async function factoryFixture(): Promise<FactoryFixture> {
   const factory = await kimLPNFTFactory.deploy(other, factory404Address);
 
   const tokenAFactory = await hre.ethers.getContractFactory("TSTToken");
-  const tokenA = await tokenAFactory.deploy(100000n * 10n ** 18n);
+  const tokenA = await tokenAFactory.deploy(1000000n * 10n ** 18n);
 
   const tokenBFactory = await hre.ethers.getContractFactory("TSTToken");
-  const tokenB = await tokenBFactory.deploy(100000n * 10n ** 18n);
+  const tokenB = await tokenBFactory.deploy(1000000n * 10n ** 18n);
 
   return { factory, tokenA, tokenB };
 }
@@ -79,8 +79,8 @@ export async function pairFixture(): Promise<PairFixture> {
     await tokenA.getAddress(),
     await tokenB.getAddress()
   );
-  const pair = new Contract(pairAddress, kimPairAbi, wallet);
-  const lp404 = new Contract(await pair.lp404(), lp404Abi, wallet);
+  const pair = new Contract(pairAddress, LPNFTPairAbi, wallet);
+  const lp404 = new Contract(await pair.lp404(), LP404Abi, wallet);
 
   const token0Address = await (pair.connect(wallet) as Contract).token0();
   const token0 = tokenA.address === token0Address ? tokenA : tokenB;
