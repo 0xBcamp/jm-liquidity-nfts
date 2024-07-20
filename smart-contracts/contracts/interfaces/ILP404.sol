@@ -43,6 +43,10 @@ interface ILP404 {
     function erc20BalanceOf(address owner_) external view returns (uint256);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Getter ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function getTokenAttributes(uint tokenId) external;
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setERC721TransferExempt(address account_, bool value_) external;
 
     function setAdminPrivileges(address _admin, bool _state) external;
