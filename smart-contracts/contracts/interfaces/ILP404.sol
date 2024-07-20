@@ -20,6 +20,8 @@ interface ILP404 {
 
     function burnERC20(address _from, uint256 _value) external;
 
+    function erc20TotalSupply() external view returns (uint256);
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setCollectionInfo(
         string calldata _traitCID,
@@ -34,6 +36,11 @@ interface ILP404 {
     ) external;
 
     function setPair(address _pair) external;
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function erc721BalanceOf(address owner_) external view returns (uint256);
+
+    function erc20BalanceOf(address owner_) external view returns (uint256);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function setERC721TransferExempt(address account_, bool value_) external;

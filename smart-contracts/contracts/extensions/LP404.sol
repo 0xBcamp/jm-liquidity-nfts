@@ -77,7 +77,7 @@ contract LP404 is Ownable, ERC404 {
 
         super._retrieveOrMintERC721(_to);
 
-        LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
+        // LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
     }
 
     function mintERC20(address to, uint256 amount) external onlyAdmin {

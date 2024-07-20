@@ -10,4 +10,10 @@ interface ILP404Factory {
         uint8 _decimals,
         address owner
     ) external returns (address);
+
+    function generateMetadata(
+        uint256 tokenId,
+        address owner,
+        address collection
+    ) external;
 }
