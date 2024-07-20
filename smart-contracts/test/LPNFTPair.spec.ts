@@ -16,10 +16,11 @@ describe("KimPair", () => {
   let token0: Contract;
   let token1: Contract;
   let pair: Contract;
+  let lp404: Contract;
 
   beforeEach(async () => {
     [wallet, other] = await ethers.getSigners();
-    ({ factory, token0, token1, pair } = await loadFixture(pairFixture));
+    ({ factory, token0, token1, pair, lp404 } = await loadFixture(pairFixture));
   });
 
   it("mints tokens successfully", async () => {
@@ -248,54 +249,61 @@ describe("KimPair", () => {
     );
   });
 
-  /*
   it("burn", async () => {
     const token0Amount = expandTo18Decimals(3);
     const token1Amount = expandTo18Decimals(3);
     await addLiquidity(token0Amount, token1Amount);
 
     const expectedLiquidity = expandTo18Decimals(3);
+
+    await lp404.approve(
+      await pair.getAddress(),
+      expectedLiquidity.valueOf() - MINIMUM_LIQUIDITY
+    );
+
     await pair.transfer(
       await pair.getAddress(),
       expectedLiquidity.valueOf() - MINIMUM_LIQUIDITY
     );
-    await expect(pair.burn(wallet.address))
-      .to.emit(token0, "Transfer")
-      .withArgs(
-        await pair.getAddress(),
-        wallet.address,
-        token0Amount.valueOf() - BigInt(1000)
-      )
-      .to.emit(token1, "Transfer")
-      .withArgs(
-        await pair.getAddress(),
-        wallet.address,
-        token1Amount.valueOf() - BigInt(1000)
-      )
-      .to.emit(pair, "Sync")
-      .withArgs(1000, 1000)
-      .to.emit(pair, "Burn")
-      .withArgs(
-        wallet.address,
-        token0Amount.valueOf() - BigInt(1000),
-        token1Amount.valueOf() - BigInt(1000),
-        wallet.address
-      );
+    //
+    // await expect(pair.burn(wallet.address))
+    //   .to.emit(token0, "Transfer")
+    //   .withArgs(
+    //     await pair.getAddress(),
+    //     wallet.address,
+    //     token0Amount.valueOf() - BigInt(1000)
+    //   )
+    //   .to.emit(token1, "Transfer")
+    //   .withArgs(
+    //     await pair.getAddress(),
+    //     wallet.address,
+    //     token1Amount.valueOf() - BigInt(1000)
+    //   )
+    //   .to.emit(pair, "Sync")
+    //   .withArgs(1000, 1000)
+    //   .to.emit(pair, "Burn")
+    //   .withArgs(
+    //     wallet.address,
+    //     token0Amount.valueOf() - BigInt(1000),
+    //     token1Amount.valueOf() - BigInt(1000),
+    //     wallet.address
+    //   );
 
-    expect(await pair.balanceOf(wallet.address)).to.eq(0);
-    expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY);
-    expect(await token0.balanceOf(await pair.getAddress())).to.eq(1000);
-    expect(await token1.balanceOf(await pair.getAddress())).to.eq(1000);
-    const totalSupplyToken0 = await token0.totalSupply();
-    const totalSupplyToken1 = await token1.totalSupply();
-    expect(await token0.balanceOf(wallet.address)).to.eq(
-      totalSupplyToken0 - BigInt(1000)
-    );
-    expect(await token1.balanceOf(wallet.address)).to.eq(
-      totalSupplyToken1 - BigInt(1000)
-    );
+    // expect(await pair.balanceOf(wallet.address)).to.eq(0);
+    // expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY);
+    // expect(await token0.balanceOf(await pair.getAddress())).to.eq(1000);
+    // expect(await token1.balanceOf(await pair.getAddress())).to.eq(1000);
+    // const totalSupplyToken0 = await token0.totalSupply();
+    // const totalSupplyToken1 = await token1.totalSupply();
+    // expect(await token0.balanceOf(wallet.address)).to.eq(
+    //   totalSupplyToken0 - BigInt(1000)
+    // );
+    // expect(await token1.balanceOf(wallet.address)).to.eq(
+    //   totalSupplyToken1 - BigInt(1000)
+    // );
   });
 
+  /*
   it("feeTo:off", async () => {
     await pair.setFeePercent(300, 300);
     await factory.setFeeTo(ZeroAddress);

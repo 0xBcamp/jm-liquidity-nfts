@@ -10,7 +10,7 @@ contract LP404 is Ownable, ERC404 {
     using MetadataLibrary for MetadataLibrary.Attribute[];
 
     error LengthMisMatch();
-    
+
     struct Attributes {
         string[] traitTypes;
         string[] values;
@@ -27,7 +27,7 @@ contract LP404 is Ownable, ERC404 {
 
     string public traitCID;
     string public description = "I am a description";
-    
+
     string internal uri = "nft-viewer.com/";
 
     constructor(
@@ -54,6 +54,22 @@ contract LP404 is Ownable, ERC404 {
         _;
     }
 
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~ Transfer Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+    // Added check to prevent transfers from unauthorized addresses
+    // I was getting an arithmetic error, where the erc20TransferFrom function was trying to subtract
+    // value from the allowed variable when its value is 0, which causeed overflow.
+    // See erc20TransferFrom function in ERC404.sol on line 295
+    // function erc20TransferFrom(    //     address from_,
+    //     address to_,
+    //     uint256 value_
+    // ) public virtual override returns (bool) {
+    //     // Check that the operator has allowance.
+    //     if (allowance[from_][msg.sender] == 0) {
+    //         revert InsufficientAllowance();
+    //     }
+
+    //     return super.erc20TransferFrom(from_, to_, value_);
+    // }
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Mint Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
     function _retrieveOrMintERC721(address _to) internal override {
         uint256 tokenId = getNextTokenId();
@@ -61,7 +77,7 @@ contract LP404 is Ownable, ERC404 {
 
         super._retrieveOrMintERC721(_to);
 
-        LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
+        // LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
     }
 
     function mintERC20(address to, uint256 amount) external onlyAdmin {
@@ -69,15 +85,18 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
-    function setCollectionInfo(string calldata _traitCID, string calldata _description) external onlyAdmin {
+    function setCollectionInfo(
+        string calldata _traitCID,
+        string calldata _description
+    ) external onlyAdmin {
         traitCID = _traitCID;
         description = _description;
     }
 
     function setAttributes(
-        uint _tokenId, 
-        string[] calldata _traitTypes, 
-        string[] calldata _values, 
+        uint _tokenId,
+        string[] calldata _traitTypes,
+        string[] calldata _values,
         bytes32 _dna
     ) external onlyAdmin {
         if (_values.length != _traitTypes.length) {
@@ -99,35 +118,44 @@ contract LP404 is Ownable, ERC404 {
         uniqueness[dna] = false;
         circulating[_tokenId] = false;
 
-        attributes[_tokenId].traitTypes = [''];
-        attributes[_tokenId].values = [''];
+        attributes[_tokenId].traitTypes = [""];
+        attributes[_tokenId].values = [""];
         attributes[_tokenId].dna = 0;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
-    function tokenURI(uint256 _id) public view override returns (string memory) {
+    function tokenURI(
+        uint256 _id
+    ) public view override returns (string memory) {
         if (!circulating[_id]) {
             revert InvalidTokenId();
         }
 
-        MetadataLibrary.Attribute[] memory attrs = new MetadataLibrary.Attribute[](attributes[_id].values.length);
+        MetadataLibrary.Attribute[]
+            memory attrs = new MetadataLibrary.Attribute[](
+                attributes[_id].values.length
+            );
         for (uint i = 0; i < attributes[_id].values.length; i++) {
-            attrs[i] = MetadataLibrary.Attribute(attributes[_id].traitTypes[i], attributes[_id].values[i]);
+            attrs[i] = MetadataLibrary.Attribute(
+                attributes[_id].traitTypes[i],
+                attributes[_id].values[i]
+            );
         }
 
-        return MetadataLibrary.buildTokenURI(
-            _id,
-            name,
-            description,
-            uri,
-            address(this),
-            attrs
-        );
+        return
+            MetadataLibrary.buildTokenURI(
+                _id,
+                name,
+                description,
+                uri,
+                address(this),
+                attrs
+            );
     }
 
-    function getNextTokenId() internal view  returns (uint tokenId) {
+    function getNextTokenId() internal view returns (uint tokenId) {
         uint tokenIndex = getERC721QueueLength();
-        
+
         if (tokenIndex > 0) {
             return getERC721TokensInQueue(tokenIndex - 1, 1)[0];
         } else {
@@ -136,7 +164,10 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Admin Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
-    function setERC721TransferExempt(address account_, bool value_) external onlyAdmin {
+    function setERC721TransferExempt(
+        address account_,
+        bool value_
+    ) external onlyAdmin {
         _setERC721TransferExempt(account_, value_);
     }
 
@@ -150,10 +181,7 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // Function that allows external Pair Contract to burn tokens
-    function burnERC20(
-        address _from,
-        uint256 _value
-    ) public onlyAdmin {
+    function burnERC20(address _from, uint256 _value) public onlyAdmin {
         _transferERC20WithERC721(_from, address(0), _value);
     }
 

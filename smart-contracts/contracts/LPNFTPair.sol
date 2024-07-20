@@ -192,6 +192,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         (uint ownerFeeShare, address feeTo) = IKimFactory(factory).feeInfo();
         feeOn = feeTo != address(0);
         uint _kLast = kLast;
+        uint _totalSupply = ILP404(lp404).erc20TotalSupply();
         // gas savings
         if (feeOn) {
             if (_kLast != 0) {
@@ -201,14 +202,13 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
                     uint d = (FEE_DENOMINATOR.mul(100) / ownerFeeShare).sub(
                         100
                     );
-                    uint numerator = totalSupply.mul(rootK.sub(rootKLast)).mul(
+                    uint numerator = _totalSupply.mul(rootK.sub(rootKLast)).mul(
                         100
                     );
                     uint denominator = rootK.mul(d).add(rootKLast.mul(100));
                     uint liquidity = numerator / denominator;
                     // ILP404 lp404Instance = ILP404(lp404);
-                    if (liquidity > 0)
-                        ILP404(lp404).mintERC20(feeTo, liquidity);
+                    if (liquidity > 0) _mint(feeTo, liquidity);
                 }
             }
         } else if (_kLast != 0) {
@@ -226,12 +226,11 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         uint amount1 = balance1.sub(_reserve1);
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
-        uint _totalSupply = totalSupply;
-        // gas savings, must be defined here since totalSupply can update in _mintFee
+        uint _totalSupply = ILP404(lp404).erc20TotalSupply();
         if (_totalSupply == 0) {
+            // Im not sure this logic to permanently lock the first MINIMUM_LIQUIDITY tokens is needed - Muriuki
             liquidity = Math.sqrt(amount0.mul(amount1)).sub(MINIMUM_LIQUIDITY);
-            // ILP404(lp404).mintERC20(address(0), MINIMUM_LIQUIDITY); // This doesnt work as expected
-            // permanently lock the first MINIMUM_LIQUIDITY tokens
+            _mint(address(factory), MINIMUM_LIQUIDITY); // This is just to add Min Liquidity to the totalSupply value in LP404
         } else {
             liquidity = Math.min(
                 amount0.mul(_totalSupply) / _reserve0,
@@ -239,12 +238,22 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             );
         }
         require(liquidity > 0, "KimPair: INSUFFICIENT_LIQUIDITY_MINTED");
-        ILP404(lp404).mintERC20(to, liquidity);
+        _mint(to, liquidity);
 
         _update(balance0, balance1);
         if (feeOn) kLast = _k(uint(reserve0), uint(reserve1));
         // reserve0 and reserve1 are up-to-date
         emit Mint(msg.sender, amount0, amount1);
+    }
+
+    // This is so that we can transfer LP404 tokens
+    function transfer(
+        address to,
+        uint value
+    ) external override(UniswapV2ERC20, IUniswapV2ERC20) returns (bool) {
+        ILP404(lp404).transferFrom(msg.sender, to, value);
+        balanceOf[msg.sender] = ILP404(lp404).erc20BalanceOf(msg.sender);
+        return true;
     }
 
     // this low-level function should be called from a contract which performs important safety checks
@@ -256,10 +265,10 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         address _token1 = token1; // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        uint liquidity = balanceOf[address(this)];
+        uint liquidity = ILP404(lp404).erc20BalanceOf(address(this));
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
-        uint _totalSupply = totalSupply; // gas savings, must be defined here since totalSupply can update in _mintFee
+        uint _totalSupply = ILP404(lp404).erc20TotalSupply(); // gas savings, must be defined here since totalSupply can update in _mintFee
         amount0 = liquidity.mul(balance0) / _totalSupply; // using balances ensures pro-rata distribution
         amount1 = liquidity.mul(balance1) / _totalSupply; // using balances ensures pro-rata distribution
         require(
@@ -267,7 +276,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             "KimPair: INSUFFICIENT_LIQUIDITY_BURNED"
         );
 
-        ILP404(lp404).burnERC20(address(this), liquidity);
+        _burn(address(this), liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));
@@ -686,5 +695,24 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         require(success, "KimPair::withdraw: withdraw failed");
 
         return abi.decode(data, (uint256));
+    }
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~ LP404 Functions ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function getTotalSupply() external view returns (uint) {
+        return ILP404(lp404).erc20TotalSupply();
+    }
+
+    function _mint(address to, uint value) internal override {
+        ILP404(lp404).mintERC20(to, value);
+        totalSupply = ILP404(lp404).erc20TotalSupply();
+        balanceOf[to] = ILP404(lp404).erc20BalanceOf(to);
+        emit Transfer(address(0), to, value);
+    }
+
+    function _burn(address from, uint value) internal override {
+        ILP404(lp404).burnERC20(from, value);
+        totalSupply = ILP404(lp404).erc20TotalSupply();
+        balanceOf[from] = ILP404(lp404).erc20BalanceOf(from);
+        emit Transfer(from, address(0), value);
     }
 }
