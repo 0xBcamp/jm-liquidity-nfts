@@ -28,7 +28,7 @@ contract LP404Factory {
             _description,
             _decimals,
             owner,
-            msg.sender
+            address(this)
         );
         bytes memory bytecode = abi.encodePacked(
             type(LP404).creationCode,
