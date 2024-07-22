@@ -41,6 +41,7 @@ contract LP404 is Ownable, ERC404 {
         address _initialOwner
     ) ERC404(_name, _symbol, _decimals) Ownable(_initialOwner) {
         _setERC721TransferExempt(_initialOwner, true);
+        admin[_initialOwner] = true;
         traitCID = _traitCID;
         description = _description;
     }
