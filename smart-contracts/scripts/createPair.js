@@ -22,6 +22,8 @@ async function main() {
   const description = "This is a description";
   const decimals = 18;
 
+    // Add step to manually transfer tokens from both contracts to have them available. 
+
   try {
     console.log("Calling createPair...");
     const tx = await kimLPNFTFactory.createPair(tokenA, tokenB, name, symbol, traitCID, description, decimals);

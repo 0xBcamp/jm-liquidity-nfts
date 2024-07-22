@@ -23,6 +23,8 @@ interface ILP404 {
     function erc20TotalSupply() external view returns (uint256);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function initialize(address _factory, address _pair) external;
+
     function setCollectionInfo(
         string calldata _traitCID,
         string calldata _description
@@ -34,8 +36,6 @@ interface ILP404 {
         string[] calldata _values,
         bytes32 _dna
     ) external;
-
-    function setPair(address _pair) external;
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
     function erc721BalanceOf(address owner_) external view returns (uint256);
