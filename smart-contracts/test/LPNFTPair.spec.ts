@@ -265,42 +265,42 @@ describe("KimPair", () => {
       await pair.getAddress(),
       expectedLiquidity.valueOf() - MINIMUM_LIQUIDITY
     );
-    //
-    // await expect(pair.burn(wallet.address))
-    //   .to.emit(token0, "Transfer")
-    //   .withArgs(
-    //     await pair.getAddress(),
-    //     wallet.address,
-    //     token0Amount.valueOf() - BigInt(1000)
-    //   )
-    //   .to.emit(token1, "Transfer")
-    //   .withArgs(
-    //     await pair.getAddress(),
-    //     wallet.address,
-    //     token1Amount.valueOf() - BigInt(1000)
-    //   )
-    //   .to.emit(pair, "Sync")
-    //   .withArgs(1000, 1000)
-    //   .to.emit(pair, "Burn")
-    //   .withArgs(
-    //     wallet.address,
-    //     token0Amount.valueOf() - BigInt(1000),
-    //     token1Amount.valueOf() - BigInt(1000),
-    //     wallet.address
-    //   );
 
-    // expect(await pair.balanceOf(wallet.address)).to.eq(0);
+    await expect(pair.burn(wallet.address))
+      .to.emit(token0, "Transfer")
+      .withArgs(
+        await pair.getAddress(),
+        wallet.address,
+        token0Amount.valueOf() - BigInt(1000)
+      )
+      .to.emit(token1, "Transfer")
+      .withArgs(
+        await pair.getAddress(),
+        wallet.address,
+        token1Amount.valueOf() - BigInt(1000)
+      )
+      .to.emit(pair, "Sync")
+      .withArgs(1000, 1000)
+      .to.emit(pair, "Burn")
+      .withArgs(
+        wallet.address,
+        token0Amount.valueOf() - BigInt(1000),
+        token1Amount.valueOf() - BigInt(1000),
+        wallet.address
+      );
+
+    expect(await pair.balanceOf(wallet.address)).to.eq(0);
     // expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY);
-    // expect(await token0.balanceOf(await pair.getAddress())).to.eq(1000);
-    // expect(await token1.balanceOf(await pair.getAddress())).to.eq(1000);
-    // const totalSupplyToken0 = await token0.totalSupply();
-    // const totalSupplyToken1 = await token1.totalSupply();
-    // expect(await token0.balanceOf(wallet.address)).to.eq(
-    //   totalSupplyToken0 - BigInt(1000)
-    // );
-    // expect(await token1.balanceOf(wallet.address)).to.eq(
-    //   totalSupplyToken1 - BigInt(1000)
-    // );
+    expect(await token0.balanceOf(await pair.getAddress())).to.eq(1000);
+    expect(await token1.balanceOf(await pair.getAddress())).to.eq(1000);
+    const totalSupplyToken0 = await token0.totalSupply();
+    const totalSupplyToken1 = await token1.totalSupply();
+    expect(await token0.balanceOf(wallet.address)).to.eq(
+      totalSupplyToken0 - BigInt(1000)
+    );
+    expect(await token1.balanceOf(wallet.address)).to.eq(
+      totalSupplyToken1 - BigInt(1000)
+    );
   });
 
   /*

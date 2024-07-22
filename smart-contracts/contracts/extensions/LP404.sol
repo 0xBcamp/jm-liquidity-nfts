@@ -86,8 +86,8 @@ contract LP404 is Ownable, ERC404 {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
     function initialize(address _factory, address _pair) external {
-        require(!intitialized, "This contract has already been initialized");
-        intitialized = true;
+        require(!initialized, "This contract has already been initialized");
+        initialized = true;
         factory = _factory;
         admin[_factory] = true;
         pairContract = _pair;
@@ -101,7 +101,6 @@ contract LP404 is Ownable, ERC404 {
         traitCID = _traitCID;
         description = _description;
     }
-
 
     function setAttributes(
         uint _tokenId,
@@ -135,12 +134,19 @@ contract LP404 is Ownable, ERC404 {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    function getTokenAttributes(uint tokenId) external view returns (string[] memory, string[] memory, bytes32) {
-        return (attributes[tokenId].traitTypes, attributes[tokenId].values, attributes[tokenId].dna);
+    function getTokenAttributes(
+        uint tokenId
+    ) external view returns (string[] memory, string[] memory, bytes32) {
+        return (
+            attributes[tokenId].traitTypes,
+            attributes[tokenId].values,
+            attributes[tokenId].dna
+        );
     }
 
-
-    function tokenURI(uint256 _id) public view override returns (string memory) {
+    function tokenURI(
+        uint256 _id
+    ) public view override returns (string memory) {
         if (!circulating[_id]) {
             revert InvalidTokenId();
         }
@@ -167,9 +173,7 @@ contract LP404 is Ownable, ERC404 {
             );
     }
 
-
-    
-    function getNextTokenId() internal view  returns (uint tokenId) {
+    function getNextTokenId() internal view returns (uint tokenId) {
         uint tokenIndex = getERC721QueueLength();
 
         if (tokenIndex > 0) {
