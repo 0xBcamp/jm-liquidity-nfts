@@ -2,7 +2,8 @@ import { config } from 'dotenv';
 import { ethers } from 'ethers';
 import { createHelia } from 'helia';
 import { verifiedFetch } from '@helia/verified-fetch';
-import abi from '../../smart-contracts/artifacts/contracts/extensions/LP404Factory.sol/LP404Factory.json' assert { type: 'json' };
+import factoryAbi from '../../smart-contracts/artifacts/contracts/extensions/LP404Factory.sol/LP404Factory.json' assert { type: 'json' };
+import tokenAbi from '../../smart-contracts/artifacts/contracts/extensions/LP404.sol/LP404.json' assert { type: 'json' };
 
 // Load environment variables
 config();
@@ -16,8 +17,10 @@ const helia = createHelia();
 const fetchIPFS = verifiedFetch(helia);
 
 // Contract configuration
-const contractAddress = process.env.CONTRACT_ADDRESS;
-const contract = new ethers.Contract(contractAddress, abi.abi, provider);
+const lp404FactoryAddress = process.env.LP404FACTORY_CONTRACT_ADDRESS;
+const lp404Address = process.env.LP404_CONTRACT_ADDRESS;
+const factoryContract = new ethers.Contract(lp404FactoryAddress, factoryAbi.abi, provider);
+const tokenContract = new ethers.Contract(lp404Address, tokenAbi.abi, provider);
 
 // Function to fetch directory structure from IPFS
 async function fetchIPFSStructure(cid) {
@@ -40,5 +43,5 @@ async function fetchIPFSStructure(cid) {
   */
 }
 
-export { provider, helia, contract, fetchIPFSStructure };
+export { provider, helia, factoryContract, tokenContract, fetchIPFSStructure };
 
