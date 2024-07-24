@@ -297,7 +297,7 @@ describe("KimPair", () => {
       );
 
     expect(await pair.balanceOf(wallet.address)).to.eq(0);
-    // expect(await pair.getTotalSupply()).to.eq(MINIMUM_LIQUIDITY); Total supply actually remains unchanged
+    // expect(await pair.totalSupply()).to.eq(MINIMUM_LIQUIDITY);
     expect(await token0.balanceOf(await pair.getAddress())).to.eq(1000);
     expect(await token1.balanceOf(await pair.getAddress())).to.eq(1000);
     const totalSupplyToken0 = await token0.totalSupply();

@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import "hardhat-contract-sizer";
 import { HardhatUserConfig } from "hardhat/config";
 
@@ -20,6 +21,12 @@ const config: HardhatUserConfig = {
       chainId: 919,
       accounts: [PRIVATE_KEY],
     },
+  },
+  etherscan: {
+    enabled: false,
+  },
+  sourcify: {
+    enabled: true,
   },
   solidity: {
     compilers: [

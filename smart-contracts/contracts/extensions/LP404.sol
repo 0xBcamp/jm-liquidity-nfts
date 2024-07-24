@@ -25,6 +25,8 @@ contract LP404 is Ownable, ERC404 {
     address public factory;
     address public pairContract;
 
+    bool internal initialized = false;
+
     string public traitCID;
     string public description = "I am a description";
 
@@ -36,14 +38,12 @@ contract LP404 is Ownable, ERC404 {
         string memory _traitCID,
         string memory _description,
         uint8 _decimals,
-        address _initialOwner,
-        address _factory
+        address _initialOwner
     ) ERC404(_name, _symbol, _decimals) Ownable(_initialOwner) {
         _setERC721TransferExempt(_initialOwner, true);
+        admin[_initialOwner] = true;
         traitCID = _traitCID;
         description = _description;
-        factory = _factory;
-        admin[_factory] = true;
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Modifiers ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -77,7 +77,7 @@ contract LP404 is Ownable, ERC404 {
 
         super._retrieveOrMintERC721(_to);
 
-        // LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
+        LP404Factory(factory).generateMetadata(tokenId, _to, address(this));
     }
 
     function mintERC20(address to, uint256 amount) external onlyAdmin {
@@ -85,6 +85,15 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Setters ~~~~~~~~~~~~~~~~~~~~~~~~~
+    function initialize(address _factory, address _pair) external {
+        require(!initialized, "This contract has already been initialized");
+        initialized = true;
+        factory = _factory;
+        admin[_factory] = true;
+        pairContract = _pair;
+        admin[_pair] = true;
+    }
+
     function setCollectionInfo(
         string calldata _traitCID,
         string calldata _description
@@ -124,6 +133,17 @@ contract LP404 is Ownable, ERC404 {
     }
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~ Getters ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function getTokenAttributes(
+        uint tokenId
+    ) external view returns (string[] memory, string[] memory, bytes32) {
+        return (
+            attributes[tokenId].traitTypes,
+            attributes[tokenId].values,
+            attributes[tokenId].dna
+        );
+    }
+
     function tokenURI(
         uint256 _id
     ) public view override returns (string memory) {
@@ -173,11 +193,6 @@ contract LP404 is Ownable, ERC404 {
 
     function setAdminPrivileges(address _admin, bool _state) public onlyAdmin {
         admin[_admin] = _state;
-    }
-
-    function setPair(address _pair) external onlyAdmin {
-        pairContract = _pair;
-        setAdminPrivileges(_pair, true);
     }
 
     // Function that allows external Pair Contract to burn tokens
