@@ -19,21 +19,58 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { Address } from "viem";
+import {
+  useWaitForTransactionReceipt,
+  useWriteContract,
+  useAccount,
+  type BaseError,
+} from "wagmi";
+
+import ERC20 from "@/contracts/ERC20.json";
+import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
+import Link from "next/link";
+
 const DepositToPairSchema = z.object({
-  amount: z.number({ required_error: "Provide number of decimals" }),
+  amount: z.coerce
+    .number({ required_error: "Provide amount to deposit" })
+    .min(0.0000001, { message: "Amount must be greater than 0" }),
 });
+
+enum Status {
+  "Idle",
+  "Minting",
+  "Transferring Token0",
+  "Transferring Token1",
+}
 
 export default function DepositToPairCard({
   token0,
   token1,
+  lpnftPairAddress,
 }: {
-  token0: any;
-  token1: any;
+  token0: Address | undefined;
+  token1: Address | undefined;
+  lpnftPairAddress: Address | undefined;
 }) {
-  // 1. Define your form.
+  const [token0Transfered, setToken0Transfered] = useState(false);
+  const [token1Transfered, setToken1Transfered] = useState(false);
+  const [completed, setCompleted] = useState(false);
+  const [completedHash, setCompletedHash] = useState<string | undefined>();
+  const [status, setStatus] = useState<Status>(Status["Idle"]);
+
+  const {
+    data: hash,
+    writeContractAsync,
+    isPending,
+    error,
+  } = useWriteContract();
+  const account = useAccount();
+
   const depositForm = useForm<z.infer<typeof DepositToPairSchema>>({
     resolver: zodResolver(DepositToPairSchema),
     defaultValues: {
@@ -42,11 +79,77 @@ export default function DepositToPairCard({
   });
   type DepositToPairValues = z.infer<typeof DepositToPairSchema>;
 
-  // 2. Define a submit handler.
-  function depositFormOnSubmit(data: DepositToPairValues) {
+  function reset() {
+    setStatus(Status["Idle"]);
+  }
+
+  async function transferToken0(amount: number) {
+    console.log("Token0 : ", token0);
     // Transfer token0 amount to the pair
+    setStatus(Status["Transferring Token0"]);
+    const data = await writeContractAsync({
+      address: token0 as Address,
+      abi: ERC20,
+      functionName: "transfer",
+      args: [lpnftPairAddress, BigInt(amount) * BigInt(10) ** BigInt(18)],
+    });
+    if (data) {
+      setToken0Transfered(true);
+      setStatus(Status["Idle"]);
+    }
+    return data;
+  }
+
+  async function transferToken1(amount: number) {
+    console.log("Token1 : ", token1);
     // Transfer token1 amount to the pair
-    // Mint LP404 from the pair
+    setStatus(Status["Transferring Token1"]);
+    const data = await writeContractAsync({
+      address: token1 as Address,
+      abi: ERC20,
+      functionName: "transfer",
+      args: [lpnftPairAddress, BigInt(amount) * BigInt(10) ** BigInt(18)],
+    });
+    if (data) {
+      setToken1Transfered(true);
+      setStatus(Status["Idle"]);
+    }
+    return data;
+  }
+
+  async function depositFormOnSubmit(data: DepositToPairValues) {
+    setCompleted(false);
+    let tx0 = undefined;
+    let tx1 = undefined;
+
+    if (data.amount != 0 && !token0Transfered) {
+      tx0 = await transferToken0(data.amount).catch((e) => reset());
+    }
+    if (data.amount != 0 && !token1Transfered) {
+      tx1 = await transferToken1(data.amount).catch((e) => reset());
+    }
+  }
+
+  async function mint() {
+    setStatus(Status["Minting"]);
+    console.log("Minting LP404...");
+    // Change to && if you want to transfer both tokens before minting
+    // Mint LP404 from the pair to the user
+    const data = await writeContractAsync({
+      address: lpnftPairAddress as Address,
+      abi: LPNFTPAIR.abi,
+      functionName: "mint",
+      args: [account.address],
+    }).catch((e) => reset());
+
+    console.log("Done Minting");
+    if (data) {
+      setToken0Transfered(false);
+      setToken1Transfered(false);
+      setStatus(Status["Idle"]);
+      setCompletedHash(data);
+      setCompleted(true);
+    }
   }
 
   return (
@@ -68,16 +171,49 @@ export default function DepositToPairCard({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>{" "}
                     <FormControl>
-                      <Input {...field} />
+                      <Input type="number" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
-              <Button type="submit" className="w-full bg-green-600">
-                Deposit
-              </Button>
+              <div className="w-full flex items-center justify-between gap-6">
+                <Button
+                  disabled={isPending}
+                  type="submit"
+                  className="w-full bg-green-600"
+                >
+                  {(status === Status["Transferring Token0"] &&
+                    "Transferring Token0...") ||
+                    (status === Status["Transferring Token1"] &&
+                      "Transferring Token1...") ||
+                    (status === Status["Idle"] && "Deposit") ||
+                    "Deposit"}
+                </Button>
+                <Button
+                  disabled={isPending}
+                  onClick={mint}
+                  className="w-full bg-blue-600"
+                >
+                  {status === Status.Minting ? "Minting..." : "Mint"}
+                </Button>
+              </div>
+              <div className="w-full">
+                {completed && completedHash && (
+                  <Link
+                    href={`https://sepolia.explorer.mode.network/tx/${completedHash}`}
+                    className="text-blue-500"
+                    target="blank"
+                  >
+                    Transaction Hash: {completedHash.substring(0, 10) + "..."}
+                  </Link>
+                )}
+                {error && (
+                  <div>
+                    Error: {(error as BaseError).shortMessage || error.message}
+                  </div>
+                )}
+              </div>
             </div>
           </form>
         </Form>
