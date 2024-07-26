@@ -1,5 +1,6 @@
 "use client";
 
+// ShadCN Imports
 import {
   Card,
   CardContent,
@@ -18,40 +19,41 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
+// Form Validation Imports
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-
-import { type BaseError, useWriteContract } from "wagmi";
+// Ethereum Imports
+import { ethers } from "ethers";
+import { type BaseError, useWriteContract, useClient } from "wagmi";
 import { Address } from "viem";
-import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
-import LP404 from "@/contracts/LP404.json";
 import LPNFTFACTORY from "@/contracts/KimLPNFTFactory.json";
-import { getFactoryAddress, getPairAddress } from "@/lib/serverFunctions";
-
-const CreatePairSchema = z.object({
-  tokenA: z.string().min(32, "Invalid Address Length"),
-  tokenB: z.string().min(32, "Invalid Address Length"),
-  name: z.string({ required_error: "Provide a name for the pair" }),
-  symbol: z.string({ required_error: "Provide a symbol for the pair" }),
-  traitCID: z.string({ required_error: "Provide the trait CID" }),
-  description: z.string({
-    required_error: "Provide a description of the NFT",
-  }),
-  decimals: z.number({ required_error: "Provide number of decimals" }),
-});
+import { getFactoryAddress } from "@/lib/serverFunctions";
 
 export default function CreatePairCard({
   setPair,
-  setLp404,
+  setToken0,
+  setToken1,
 }: {
   setPair: Function;
-  setLp404: Function;
+  setToken0: Function;
+  setToken1: Function;
 }) {
-  const { data: hash, writeContract, isPending, error } = useWriteContract();
-
+  // ~~~~~~~~~~~~~~~~~~~~ Setup The Form ~~~~~~~~~~~~~~~~~~~~
+  // Form validation schema
+  const CreatePairSchema = z.object({
+    tokenA: z.string().min(32, "Invalid Address Length"),
+    tokenB: z.string().min(32, "Invalid Address Length"),
+    name: z.string({ required_error: "Provide a name for the pair" }),
+    symbol: z.string({ required_error: "Provide a symbol for the pair" }),
+    traitCID: z.string({ required_error: "Provide the trait CID" }),
+    description: z.string({
+      required_error: "Provide a description of the NFT",
+    }),
+    decimals: z.number({ required_error: "Provide number of decimals" }),
+  });
+  type CreatePairValues = z.infer<typeof CreatePairSchema>;
+  // Form object
   const form = useForm<z.infer<typeof CreatePairSchema>>({
     resolver: zodResolver(CreatePairSchema),
     defaultValues: {
@@ -64,48 +66,72 @@ export default function CreatePairCard({
       decimals: 18,
     },
   });
-  type CreatePairValues = z.infer<typeof CreatePairSchema>;
 
-  async function createPairOnSubmit(data: CreatePairValues) {
-    // Connect to the factory Create the pair
+  // ~~~~~~~~~~~~~~~~~~~~ Setup Interactions ~~~~~~~~~~~~~~~~~~~~
+  const {
+    data: hash,
+    writeContractAsync,
+    isPending,
+    error,
+  } = useWriteContract();
+  const client = useClient();
 
+  // Creates a Pair
+  async function createPair(formValues: CreatePairValues) {
+    // Get the factory address
     const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
+    // Check if the factory address is set
     if (!LPNFT_FACTORY_ADDRESS) {
       throw new Error("LPNFT_FACTORY_ADDRESS not set");
     }
-
-    const args = [
-      data.tokenA as Address,
-      data.tokenB as Address,
-      data.name,
-      data.symbol,
-      data.traitCID,
-      data.description,
-      BigInt(data.decimals),
-    ];
-
-    console.log("Form Data: ", data);
-    console.log("Fatory Address: ", LPNFT_FACTORY_ADDRESS);
-
     // Create the pair
-    writeContract({
+    const pairInfo = await writeContractAsync({
       address: LPNFT_FACTORY_ADDRESS,
       abi: LPNFTFACTORY.abi,
       functionName: "createPair",
-      args,
+      args: [
+        formValues.tokenA as Address,
+        formValues.tokenB as Address,
+        formValues.name,
+        formValues.symbol,
+        formValues.traitCID,
+        formValues.description,
+        BigInt(formValues.decimals),
+      ],
+    }).catch((e: Error) => {
+      console.log((e as BaseError).shortMessage || e.message);
     });
-
-    // Get the pair
-
-    // Set the pair and lp404
-    setPair(await getPairAddress());
+    // Set the pair address and token addresses
+    setPair(
+      await getPair(formValues.tokenA as Address, formValues.tokenB as Address),
+    );
+    setToken1(formValues.tokenB as Address);
+    setToken0(formValues.tokenA as Address);
   }
 
-  // useEffect(() => {
-  //   if (error) {
-  //     console.log(error);
-  //   }
-  // }, [error]);
+  // Gets a pair address
+  async function getPair(tokenA: Address, tokenB: Address) {
+    // Get the factory address
+    const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
+    // Check if the factory address is set
+    if (!LPNFT_FACTORY_ADDRESS) {
+      throw new Error("LPNFT_FACTORY_ADDRESS not set");
+    }
+    // Check if the client is connected
+    if (!client) {
+      throw new Error("No connected client");
+    }
+    // Get the RPC URL
+    const url = client.chain.rpcUrls.default.http[0];
+    const provider = new ethers.JsonRpcProvider(url);
+    const factoryContract = new ethers.Contract(
+      LPNFT_FACTORY_ADDRESS,
+      LPNFTFACTORY.abi,
+      provider,
+    );
+    const pairAddress = await factoryContract.getPair(tokenA, tokenB);
+    return pairAddress ? (pairAddress as Address) : undefined;
+  }
 
   return (
     <Card className="mx-auto max-w-sm">
@@ -117,7 +143,7 @@ export default function CreatePairCard({
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(createPairOnSubmit)}>
+          <form onSubmit={form.handleSubmit(createPair)}>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <FormField

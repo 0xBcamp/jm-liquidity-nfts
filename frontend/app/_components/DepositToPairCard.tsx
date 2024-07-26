@@ -1,5 +1,6 @@
 "use client";
 
+// ShadCN Imports
 import {
   Card,
   CardContent,
@@ -18,11 +19,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
+// Form Imports
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+// Ethereum Imports
 import { Address } from "viem";
 import {
   useWaitForTransactionReceipt,
@@ -30,23 +33,9 @@ import {
   useAccount,
   type BaseError,
 } from "wagmi";
-
 import ERC20 from "@/contracts/ERC20.json";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import Link from "next/link";
-
-const DepositToPairSchema = z.object({
-  amount: z.coerce
-    .number({ required_error: "Provide amount to deposit" })
-    .min(0.0000001, { message: "Amount must be greater than 0" }),
-});
-
-enum Status {
-  "Idle",
-  "Minting",
-  "Transferring Token0",
-  "Transferring Token1",
-}
 
 export default function DepositToPairCard({
   token0,
@@ -57,19 +46,26 @@ export default function DepositToPairCard({
   token1: Address | undefined;
   lpnftPairAddress: Address | undefined;
 }) {
+  // Setup state Variables
   const [token0Transfered, setToken0Transfered] = useState(false);
   const [token1Transfered, setToken1Transfered] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedHash, setCompletedHash] = useState<string | undefined>();
   const [status, setStatus] = useState<Status>(Status["Idle"]);
 
-  const {
-    data: hash,
-    writeContractAsync,
-    isPending,
-    error,
-  } = useWriteContract();
-  const account = useAccount();
+  enum Status {
+    "Idle",
+    "Minting",
+    "Transferring Token0",
+    "Transferring Token1",
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  const DepositToPairSchema = z.object({
+    amount: z.coerce
+      .number({ required_error: "Provide amount to deposit" })
+      .min(0.0000001, { message: "Amount must be greater than 0" }),
+  });
 
   const depositForm = useForm<z.infer<typeof DepositToPairSchema>>({
     resolver: zodResolver(DepositToPairSchema),
@@ -79,10 +75,21 @@ export default function DepositToPairCard({
   });
   type DepositToPairValues = z.infer<typeof DepositToPairSchema>;
 
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ethereum Iteractions setup ~~~~~~~~~~~~~~~~~~~~~~~~~
+  const {
+    data: hash,
+    writeContractAsync,
+    isPending,
+    error,
+  } = useWriteContract();
+  const account = useAccount();
+
+  // Helper functions
   function reset() {
     setStatus(Status["Idle"]);
   }
 
+  // Transfer token0 and token1 to the pair
   async function transferToken0(amount: number) {
     console.log("Token0 : ", token0);
     // Transfer token0 amount to the pair
@@ -99,7 +106,6 @@ export default function DepositToPairCard({
     }
     return data;
   }
-
   async function transferToken1(amount: number) {
     console.log("Token1 : ", token1);
     // Transfer token1 amount to the pair
@@ -117,7 +123,8 @@ export default function DepositToPairCard({
     return data;
   }
 
-  async function depositFormOnSubmit(data: DepositToPairValues) {
+  // Deposits liquidity to the pair
+  async function depositLiquidity(data: DepositToPairValues) {
     setCompleted(false);
     let tx0 = undefined;
     let tx1 = undefined;
@@ -130,9 +137,9 @@ export default function DepositToPairCard({
     }
   }
 
+  // Mints LP404
   async function mint() {
     setStatus(Status["Minting"]);
-    console.log("Minting LP404...");
     // Change to && if you want to transfer both tokens before minting
     // Mint LP404 from the pair to the user
     const data = await writeContractAsync({
@@ -142,7 +149,6 @@ export default function DepositToPairCard({
       args: [account.address],
     }).catch((e) => reset());
 
-    console.log("Done Minting");
     if (data) {
       setToken0Transfered(false);
       setToken1Transfered(false);
@@ -157,12 +163,12 @@ export default function DepositToPairCard({
       <CardHeader>
         <CardTitle className="text-2xl">Deposit from LPNFT Pair</CardTitle>
         <CardDescription>
-          Enter amount you wish to deposit from the Pair
+          Enter amount you wish to deposit from the Pair.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...depositForm}>
-          <form onSubmit={depositForm.handleSubmit(depositFormOnSubmit)}>
+          <form onSubmit={depositForm.handleSubmit(depositLiquidity)}>
             <div className="grid gap-4">
               <FormField
                 control={depositForm.control}

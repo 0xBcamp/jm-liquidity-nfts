@@ -36,14 +36,15 @@ export default function () {
   const [token0, setToken0] = useState<Address | undefined>(undefined);
   const [token1, setToken1] = useState<Address | undefined>(undefined);
 
-  async function _setLpnftPairAddress(value: any) {
-    // Get the address of token0
-    setToken0((await getTokenA()) as Address);
-    // Get the address of token1
-    setToken1((await getTokenB()) as Address);
-    setLpnftPairAddress((await getPairAddress()) as Address);
+  function _setLpnftPairAddress(value: Address | undefined) {
+    setLpnftPairAddress(value);
   }
-  function _setLp404Address(value: any) {}
+  function _setToken0(value: Address | undefined) {
+    setToken0(value);
+  }
+  function _setToken1(value: Address | undefined) {
+    setToken1(value);
+  }
 
   return (
     <WagmiProvider config={config}>
@@ -59,8 +60,9 @@ export default function () {
               <section className="max-w-screen-lg grid grid-cols-8 gap-4">
                 <div className="col-span-4">
                   <CreatePairCard
-                    setLp404={_setLp404Address}
                     setPair={_setLpnftPairAddress}
+                    setToken1={_setToken1}
+                    setToken0={_setToken0}
                   />
                 </div>
                 <div className="flex flex-col gap-4 col-span-4">
