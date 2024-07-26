@@ -1,6 +1,5 @@
-import fs from 'fs-extra';
-import path from 'path';
-import crypto from 'crypto';
+import { ethers } from 'ethers';
+import sha1 from 'sha1';
 
 const rarityDelimiter = '#';
 
@@ -18,7 +17,8 @@ function capitalizeFirstLetter(string) {
 }
 
 const cleanName = (_str) => {
-  let nameWithoutExtension = _str.slice(0, -4);
+  let nameWithoutLayer = _str.split('_').pop();
+  let nameWithoutExtension = nameWithoutLayer.slice(0, -4);
   let nameWithoutWeight = nameWithoutExtension.split(rarityDelimiter).shift();
   return nameWithoutWeight;
 };
@@ -49,35 +49,29 @@ const getRarityWeight = (_str) => {
   return Number(finalWeight);
 };
 
-const getElements = (dirPath) => {
-  return fs
-    .readdirSync(dirPath)
-    .filter((item) => {
-      const fullPath = path.join(dirPath, item);
-      return fs.statSync(fullPath).isFile() && !/(^|\/)\.[^\/\.]/g.test(item);
-    })
-    .map((i, index) => {
-      if (i.includes("-")) {
-        throw new Error(`Layer name cannot contain dashes, please fix: ${i}`);
-      }
-      return {
-        id: index,
-        name: cleanName(i),
-        filename: i,
-        path: path.join(dirPath, i),
-        weight: getRarityWeight(i),
-      };
-    });
+const getElements = (layer) => {
+  return layer.map((i, index) => {
+    if (i.includes('-')) {
+      throw new Error(`Layer name cannot contain dashes, please fix: ${i}`);
+    }
+    return {
+      id: index,
+      name: cleanName(i),
+      filename: i,
+      weight: getRarityWeight(i),
+    };
+  });
 };
 
-async function generateTraits(layersDir, layerFolders) {
+async function generateTraits(layers) {
   const traitTypes = [];
   const values = [];
   const randNum = [];
 
-  for (const folder of layerFolders) {
-    const layerPath = path.join(layersDir, folder);
-    const elements = getElements(layerPath);
+  const layerNames = Object.keys(layers);
+
+  for (const layer of layerNames) {
+    const elements = getElements(layers[layer]);
 
     let totalWeight = 0;
     elements.forEach((element) => {
@@ -88,17 +82,73 @@ async function generateTraits(layersDir, layerFolders) {
     for (let i = 0; i < elements.length; i++) {
       random -= elements[i].weight;
       if (random < 0) {
-        traitTypes.push(folder);
-        values.push(elements[i].filename);
+        traitTypes.push(layer);
+        values.push(elements[i].name);
         randNum.push(`${elements[i].id}:${elements[i].filename}`);
         break;
       }
     }
   }
 
-  const dna = crypto.createHash('sha1').update(randNum.join('-')).digest('hex');
+  const dna = sha1(`${randNum.join('-')}`);
+  const dnaBytes32 = ethers.hexlify(ethers.zeroPadValue(ethers.getBytes(`0x${dna}`), 32));
 
-  return { traitTypes, values, dna };
+  console.log({ traitTypes, values, dnaBytes32 });
+
+  return { traitTypes, values, dnaBytes32 };
 }
+
+// const layers = {
+//   Body: [
+//     '0_Body_ScalesBeta#Common.png',      
+//     '0_Body_ScalesForked#Common.png',    
+//     '0_Body_ScalesLunate#Common.png',    
+//     '0_Body_SmoothBeta#Rare.png',        
+//     '0_Body_SmoothForked#Epic.png',      
+//     '0_Body_SmoothLunate#Legendary.png'  
+//   ],
+//   Arms: [
+//     '1_Arms_FidlerClaws#Rare.png',       
+//     '1_Arms_FinArms#Common.png',
+//     '1_Arms_LobsterClaws#Rare.png',      
+//     '1_Arms_LureArms#Epic.png',
+//     '1_Arms_TentacleArms#Legendary.png', 
+//     '1_Arms_TurtleArms#Uncommon.png'     
+//   ],
+//   Back: [
+//     '2_Back_Blowhole#Epic.png',
+//     '2_Back_DolphinFin#Uncommon.png',    
+//     '2_Back_DorsalFins#Common.png',      
+//     '2_Back_SharkFin#Rare.png',
+//     '2_Back_StrapOnShark#Legendary.png'  
+//   ],
+//   Head: [
+//     '3_Head_FishHead#Common.png',        
+//     '4_Head_AnglerEyes#Mythic.png',      
+//     '4_Head_BaseEyes#Common.png',        
+//     '4_Head_EyeScar#Uncommon.png',       
+//     '4_Head_LobsterEye#Rare.png',        
+//     '4_Head_SharkEyes#Epic.png',
+//     '4_Head_ThreeEyes#Legendary.png'     
+//   ],
+//   Legs: [
+//     '5_Legs_FinLegs#Common.png',
+//     '5_Legs_LobsterLegs#Rare.png',       
+//     '5_Legs_LureLegs#Epic.png',
+//     '5_Legs_TentacleLegs#Legendary.png', 
+//     '5_Legs_TurtleLegs#Mythic.png'       
+//   ],
+//   Mouth: [
+//     '6_Mouth_AnglerMouth#Epic.png',      
+//     '6_Mouth_BaseMouth#Common.png',      
+//     '6_Mouth_CatfishMouth#Legendary.png',
+//     '6_Mouth_SwordfishMouth#Rare.png',   
+//     '6_Mouth_TurtleBeak#Mythic.png'      
+//   ]
+// };
+
+// (async () => {
+//   await generateTraits(layers);
+// })();
 
 export default generateTraits;

@@ -7,7 +7,7 @@ const port = process.env.PORT || 3000;
 
 // Listen for events
 factoryContract.on('NeedsMetadata', async (tokenId, owner, contractAddress, ) => {
-  console.log(`NeedsMetadata event received for token ${tokenId} at contract ${contractAddress}. Processing...`);
+  console.log(`NeedsMetadata event received for token ${tokenId} at contract ${contractAddress} for owner ${owner}. Processing...`);
   await processEvent(contractAddress, tokenId);
 });
 

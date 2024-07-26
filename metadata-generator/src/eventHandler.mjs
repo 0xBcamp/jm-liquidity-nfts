@@ -1,30 +1,28 @@
-import { tokenContract, fetchIPFSStructure } from './config.mjs';
+import { provider, tokenAbi, fetchLayers } from './config.mjs';
 import generateTraits from './utils/dnaGenerator.mjs';
-import { Wallet } from 'ethers';
-import fs from 'fs-extra';
-import path from 'path';
+import { ethers, Wallet } from 'ethers';
 
 async function processEvent(contractAddress, tokenId) {
+  const tokenContract = new ethers.Contract(contractAddress, tokenAbi.abi, provider);
+
   // Fetch traitCID from contract
-  // const traitCID = await tokenContract.getTraitCID(tokenId);
+  const traitCID = await tokenContract.traitCID();
   // console.log(traitCID);
 
   // Fetch directory structure from IPFS
-  // const layers = await fetchIPFSStructure(traitCID);
-  const layersDir = path.resolve('./src/layers');
-  const layerFolders = await fs.readdir(layersDir);
-  console.log(layerFolders);
+  const layers = await fetchLayers(traitCID);
 
   // Generate traits and metadata
-  const { traitTypes, values, dna } = await generateTraits(layersDir, layerFolders);
+  const { traitTypes, values, dna } = await generateTraits(layers);
+  // check dna against contract uniqueness. If not unique, regenerate
 
-  console.log('traitTypes:', traitTypes);
-  console.log('values:', values);
-  console.log('dna:', dna);
+  // console.log('traitTypes:', traitTypes);
+  // console.log('values:', values);
+  // console.log('dna:', dna);
 
   // Setup wallet to sign the transaction
-  const wallet = new Wallet(process.env.PRIVATE_KEY, tokenContract.provider);
-  const contractWithSigner = tokenContract.connect(wallet);
+  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const contractWithSigner = tokenContract.connect(signer);
 
   // Update contract with generated attributes
   const tx = await contractWithSigner.setAttributes(tokenId, traitTypes, values, dna);
