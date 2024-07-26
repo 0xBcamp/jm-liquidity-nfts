@@ -29,7 +29,7 @@ import { Address } from "viem";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import LP404 from "@/contracts/LP404.json";
 import LPNFTFACTORY from "@/contracts/KimLPNFTFactory.json";
-import { getFactoryAddress } from "@/lib/serverFunctions";
+import { getFactoryAddress, getPairAddress } from "@/lib/serverFunctions";
 
 const CreatePairSchema = z.object({
   tokenA: z.string().min(32, "Invalid Address Length"),
@@ -84,11 +84,12 @@ export default function CreatePairCard({
       BigInt(data.decimals),
     ];
 
-    console.log(data);
+    console.log("Form Data: ", data);
+    console.log("Fatory Address: ", LPNFT_FACTORY_ADDRESS);
 
     // Create the pair
     writeContract({
-      address: process.env.LPNFT_FACTORY_ADDRESS as Address,
+      address: LPNFT_FACTORY_ADDRESS,
       abi: LPNFTFACTORY.abi,
       functionName: "createPair",
       args,
@@ -97,6 +98,7 @@ export default function CreatePairCard({
     // Get the pair
 
     // Set the pair and lp404
+    setPair(await getPairAddress());
   }
 
   // useEffect(() => {
