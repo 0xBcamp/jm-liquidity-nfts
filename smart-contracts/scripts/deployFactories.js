@@ -7,13 +7,15 @@ async function main() {
     console.log("Account balance:", balance.toString());
   
     // Deploy MetadataLibrary
-    const MetadataLibrary = await ethers.getContractFactory("MetadataLibrary");
-    const metadataLibrary = await MetadataLibrary.deploy();
-    const metadataLibraryReceipt = await metadataLibrary.deploymentTransaction().wait(2);
-    // console.log(metadataLibraryReceipt);
-    const metadataLibraryAddress = metadataLibraryReceipt.contractAddress;
-    console.log("MetadataLibrary deployed to:", metadataLibraryAddress);
+    // const MetadataLibrary = await ethers.getContractFactory("MetadataLibrary");
+    // const metadataLibrary = await MetadataLibrary.deploy();
+    // const metadataLibraryReceipt = await metadataLibrary.deploymentTransaction().wait(2);
+    // // console.log(metadataLibraryReceipt);
+    // const metadataLibraryAddress = metadataLibraryReceipt.contractAddress;
+    // console.log("MetadataLibrary deployed to:", metadataLibraryAddress);
   
+    const metadataLibraryAddress = '0xBA8b21Ec3262Ee4FBd86c72e247274dD7da728a3';
+
     // Link MetadataLibrary to LP404Factory and deploy
     const LP404Factory = await ethers.getContractFactory("LP404Factory", {
       libraries: {
