@@ -72,7 +72,7 @@ export default function () {
                     />
                   </div>
                   <div className="col-span-full">
-                    <WithdrawFromPairCard />
+                    <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
                 </div>
               </section>
