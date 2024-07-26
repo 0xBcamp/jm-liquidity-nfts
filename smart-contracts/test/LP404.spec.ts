@@ -1,10 +1,12 @@
 import { expect } from "chai";
 import { time, loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, network } from "hardhat";
-import { Contract } from "ethers";
+import { Contract, Signer } from "ethers";
 import { pairFixture } from "./shared/fixtures";
 
-describe("ERC404", function () {
+const MINIMUM_LIQUIDITY = BigInt(10) ** BigInt(3);
+
+describe("LP404", function () {
   async function deployERC404Example() {
     const signers = await ethers.getSigners();
     const { factory, tokenA, tokenB, token0, token1, pair, lp404 } =
@@ -22,20 +24,16 @@ describe("ERC404", function () {
     const idPrefix =
       57896044618658097711785492504343953926634992332820282019728792003956564819968n;
 
-    // const contract = await factory.deploy(
-    //   name,
-    //   symbol,
-    //   decimals,
-    //   maxTotalSupplyERC721,
-    //   initialOwner.address,
-    //   initialMintRecipient.address
-    // );
-
     // Generate 10 random addresses for experiments.
     const randomAddresses = Array.from(
       { length: 10 },
       () => ethers.Wallet.createRandom().address
     );
+
+    // Provide liquidity to the pair
+    await token0.transfer(await pair.getAddress(), maxTotalSupplyERC20);
+    await token1.transfer(await pair.getAddress(), maxTotalSupplyERC20);
+    await (pair.connect(initialOwner) as Contract).mint(initialMintRecipient);
 
     return {
       contract: lp404 as Contract,
@@ -141,11 +139,14 @@ describe("ERC404", function () {
 
   async function deployMinimalERC404() {
     const signers = await ethers.getSigners();
-    const factory = await ethers.getContractFactory("MinimalERC404");
+    const { factory, tokenA, tokenB, token0, token1, pair, lp404 } =
+      await loadFixture(pairFixture);
 
     const name = "Example";
     const symbol = "EX-A";
     const decimals = 18n;
+    const traitCID: string = "QmVv2tZ";
+    const description: string = "Kim LPNFT Token";
     const units = 10n ** decimals;
     const maxTotalSupplyERC721 = 100n;
     const maxTotalSupplyERC20 = maxTotalSupplyERC721 * units;
@@ -154,35 +155,39 @@ describe("ERC404", function () {
     const idPrefix =
       57896044618658097711785492504343953926634992332820282019728792003956564819968n;
 
-    const contract = await factory.deploy(
-      name,
-      symbol,
-      decimals,
-      initialOwner.address
-    );
-    await contract.waitForDeployment();
-    const contractAddress = await contract.getAddress();
-
     // Generate 10 random addresses for experiments.
     const randomAddresses = Array.from(
       { length: 10 },
       () => ethers.Wallet.createRandom().address
     );
 
+    // Provide liquidity to the pair
+    await token0.transfer(await pair.getAddress(), maxTotalSupplyERC20);
+    await token1.transfer(await pair.getAddress(), maxTotalSupplyERC20);
+    await (pair.connect(initialOwner) as Contract).mint(initialMintRecipient);
+
     return {
-      contract: contract as Contract,
-      contractAddress,
+      contract: lp404 as Contract,
+      contractAddress: await lp404.getAddress(),
       signers,
       deployConfig: {
         name,
         symbol,
         decimals,
+        traitCID,
+        description,
         units,
         maxTotalSupplyERC721,
         maxTotalSupplyERC20,
-        initialMintRecipient,
         initialOwner,
+        initialMintRecipient,
         idPrefix,
+        lpnftFactory: factory,
+        tokenA,
+        tokenB,
+        token0,
+        token1,
+        pair,
       },
       randomAddresses,
     };
@@ -192,9 +197,13 @@ describe("ERC404", function () {
     const f = await loadFixture(deployMinimalERC404);
 
     // Mint the full supply of ERC20 tokens (with the corresponding ERC721 tokens minted as well)
-    await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-      f.deployConfig.initialMintRecipient.address,
-      f.deployConfig.maxTotalSupplyERC20
+    await mintERC20(
+      f.deployConfig.token0,
+      f.deployConfig.token1,
+      f.deployConfig.pair,
+      f.deployConfig.maxTotalSupplyERC20,
+      f.deployConfig.initialMintRecipient,
+      f.signers[0]
     );
 
     return f;
@@ -366,6 +375,33 @@ describe("ERC404", function () {
     return false;
   }
 
+  // Helper function to mint tokens
+  async function mintERC20(
+    token0: Contract,
+    token1: Contract,
+    pair: Contract,
+    amount: bigint,
+    recipient: Signer,
+    signer: Signer
+  ) {
+    // Send some tokens to the other account
+    await token0.transfer(recipient, amount);
+    await token1.transfer(recipient, amount);
+
+    await (token0.connect(recipient) as Contract).transfer(
+      await pair.getAddress(),
+      amount
+    );
+    await (token1.connect(recipient) as Contract).transfer(
+      await pair.getAddress(),
+      amount
+    );
+    return await (pair.connect(signer) as Contract).mint(recipient);
+  }
+
+  // Helper function to setERC721TransferExempt
+  // Helper function to transfer tokens
+
   describe("#constructor", function () {
     it("Initializes the contract with the expected values", async function () {
       const f = await loadFixture(deployERC404Example);
@@ -390,7 +426,7 @@ describe("ERC404", function () {
         await f.contract.erc20BalanceOf(
           f.deployConfig.initialMintRecipient.address
         )
-      ).to.equal(f.deployConfig.maxTotalSupplyERC20);
+      ).to.equal(f.deployConfig.maxTotalSupplyERC20 - MINIMUM_LIQUIDITY);
       // Expect 0 ERC721 tokens to be minted to the initial recipient, since 1) the user is on the exemption list and 2) the supply is minted using _mintERC20 with mintCorrespondingERC721s_ set to false.
       expect(
         await f.contract.erc721BalanceOf(
@@ -513,13 +549,17 @@ describe("ERC404", function () {
       const f = await loadFixture(deployMinimalERC404);
 
       // Owner mints the full supply of ERC20 tokens (with the corresponding ERC721 tokens minted as well)
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units,
+        f.signers[1],
+        f.signers[0]
       );
 
       // Expect the total supply to be equal to the max total supply
-      expect(await f.contract.totalSupply()).to.equal(
+      expect(await f.contract.erc20TotalSupply()).to.equal(
         f.deployConfig.maxTotalSupplyERC20
       );
 
@@ -534,11 +574,14 @@ describe("ERC404", function () {
 
       // Owner mints the full supply of ERC20 tokens (with the corresponding ERC721 tokens minted as well)
       await f.contract.setERC721TransferExempt(f.signers[1].address, true);
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units,
+        f.signers[1],
+        f.signers[0]
       );
-
       // Expect the total supply to be equal to the max total supply
       expect(await f.contract.totalSupply()).to.equal(
         f.deployConfig.maxTotalSupplyERC20
@@ -562,9 +605,14 @@ describe("ERC404", function () {
       const value = nftQty * f.deployConfig.units;
 
       // Mint 10 ERC721s
-      const mintTx = await (
-        f.contract.connect(f.signers[0]) as Contract
-      ).mintERC20(f.signers[1].address, value);
+      const mintTx = await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        value,
+        f.signers[1],
+        f.signers[0]
+      );
 
       const receipt = await mintTx.wait();
 
@@ -607,9 +655,13 @@ describe("ERC404", function () {
       const nftQty = 10n;
       const value = nftQty * f.deployConfig.units;
 
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        value
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        value,
+        f.signers[1],
+        f.signers[0]
       );
 
       expect(await f.contract.erc721TotalSupply()).to.equal(10n);
@@ -672,9 +724,13 @@ describe("ERC404", function () {
       const nftQty = 10n;
       const erc20Value = nftQty * f.deployConfig.units;
 
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        erc20Value
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        erc20Value,
+        f.signers[1],
+        f.signers[0]
       );
 
       expect(await f.contract.erc721TotalSupply()).to.equal(10n);
@@ -2468,9 +2524,13 @@ describe("ERC404", function () {
       const f = await loadFixture(deployMinimalERC404);
 
       // Initial minting. Will mint ERC-20 and ERC-721 tokens.
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        f.deployConfig.maxTotalSupplyERC721 * f.deployConfig.units,
+        f.signers[1],
+        f.signers[0]
       );
 
       // Expect the minted count to be equal to the max total supply
@@ -2483,9 +2543,13 @@ describe("ERC404", function () {
         f.deployConfig.maxTotalSupplyERC20
       );
 
-      await (f.contract.connect(f.signers[0]) as Contract).mintERC20(
-        f.signers[1].address,
-        1n
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        1n,
+        f.signers[1],
+        f.signers[0]
       );
 
       // Expect the mint recipient to have the full supply of ERC20 tokens
@@ -2751,9 +2815,13 @@ describe("ERC404", function () {
     it("Mints on partial balances", async function () {
       const f = await loadFixture(deployMinimalERC404);
 
-      await f.contract.mintERC20(
-        f.signers[1].address,
-        (5n * f.deployConfig.units) / 10n
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        (5n * f.deployConfig.units) / 10n,
+        f.signers[1],
+        f.signers[0]
       );
 
       expect(await f.contract.balanceOf(f.signers[1].address)).to.eq(
@@ -2761,9 +2829,13 @@ describe("ERC404", function () {
       );
       expect(await f.contract.erc721BalanceOf(f.signers[1].address)).to.eq(0);
 
-      await f.contract.mintERC20(
-        f.signers[1].address,
-        (5n * f.deployConfig.units) / 10n
+      await mintERC20(
+        f.deployConfig.token0,
+        f.deployConfig.token1,
+        f.deployConfig.pair,
+        (5n * f.deployConfig.units) / 10n,
+        f.signers[1],
+        f.signers[0]
       );
 
       expect(await f.contract.balanceOf(f.signers[1].address)).to.eq(
@@ -2788,9 +2860,14 @@ describe("ERC404", function () {
           expect(await f.contract.erc721TotalSupply()).to.equal(0n);
 
           // Mint a new full ERC-20 token + corresponding ERC-721 token
-          await f.contract.mintERC20(
-            f.signers[0].address,
-            f.deployConfig.units
+          await f.contract.mintERC20(f.signers[0].address);
+          await mintERC20(
+            f.deployConfig.token0,
+            f.deployConfig.token1,
+            f.deployConfig.pair,
+            f.deployConfig.units,
+            f.signers[0],
+            f.signers[0]
           );
 
           expect(await f.contract.erc721TotalSupply()).to.equal(1n);
@@ -2810,9 +2887,13 @@ describe("ERC404", function () {
           expect(await f.contract.erc721TotalSupply()).to.equal(0n);
 
           // Mint a new full ERC-20 token + corresponding ERC-721 token
-          await f.contract.mintERC20(
-            f.signers[0].address,
-            f.deployConfig.units
+          await mintERC20(
+            f.deployConfig.token0,
+            f.deployConfig.token1,
+            f.deployConfig.pair,
+            f.deployConfig.units,
+            f.signers[0],
+            f.signers[0]
           );
 
           expect(await f.contract.erc721TotalSupply()).to.equal(1n);
@@ -2838,9 +2919,13 @@ describe("ERC404", function () {
           ).to.equal(f.contractAddress);
 
           // Mint a new full ERC-20 token + corresponding ERC-721 token
-          await f.contract.mintERC20(
-            f.signers[0].address,
-            f.deployConfig.units
+          await mintERC20(
+            f.deployConfig.token0,
+            f.deployConfig.token1,
+            f.deployConfig.pair,
+            f.deployConfig.units,
+            f.signers[0],
+            f.signers[0]
           );
 
           expect(await f.contract.erc721TotalSupply()).to.equal(2n);
