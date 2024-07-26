@@ -115,9 +115,18 @@ contract LP404 is Ownable, ERC404 {
             revert AlreadyExists();
         }
 
-        Attributes memory newAttr = Attributes(_traitTypes, _values, _dna);
+        Attributes storage newAttr = attributes[_tokenId];
 
-        attributes[_tokenId] = newAttr;
+        // Clear previous attributes
+        delete newAttr.traitTypes;
+        delete newAttr.values;
+
+        for (uint i = 0; i < _traitTypes.length; i++) {
+            newAttr.traitTypes.push(_traitTypes[i]);
+            newAttr.values.push(_values[i]);
+        }
+
+        newAttr.dna = _dna;
         uniqueness[_dna] = true;
     }
 
