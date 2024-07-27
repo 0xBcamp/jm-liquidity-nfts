@@ -265,7 +265,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
         address _token1 = token1; // gas savings
         uint balance0 = IERC20(_token0).balanceOf(address(this));
         uint balance1 = IERC20(_token1).balanceOf(address(this));
-        uint liquidity = ILP404(lp404).erc20BalanceOf(address(this));
+        uint liquidity = ILP404(lp404).erc20BalanceOf(to);
 
         bool feeOn = _mintFee(_reserve0, _reserve1);
         uint _totalSupply = ILP404(lp404).erc20TotalSupply(); // gas savings, must be defined here since totalSupply can update in _mintFee
@@ -276,7 +276,7 @@ contract KimLPNFTPair is IKimPair, UniswapV2ERC20 {
             "KimPair: INSUFFICIENT_LIQUIDITY_BURNED"
         );
 
-        _burn(address(this), liquidity);
+        _burn(to, liquidity);
         _safeTransfer(_token0, to, amount0);
         _safeTransfer(_token1, to, amount1);
         balance0 = IERC20(_token0).balanceOf(address(this));

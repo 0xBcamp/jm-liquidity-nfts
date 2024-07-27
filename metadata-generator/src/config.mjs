@@ -11,7 +11,7 @@ config();
 const provider = new ethers.JsonRpcProvider(process.env.MODE_TESTNET_RPC);
 
 // Contract configuration
-const lp404FactoryAddress = '0xD44a6BD98A2552e6D97058047d6e484d2C8d3B8B';
+const lp404FactoryAddress = '0xd0fdc365de3CB8C0Ef2A3Cf871a187A487829Cde';
 const factoryContract = new ethers.Contract(lp404FactoryAddress, factoryAbi.abi, provider);
 
 // Pinata gateway URL

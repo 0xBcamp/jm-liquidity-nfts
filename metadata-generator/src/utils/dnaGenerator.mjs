@@ -90,12 +90,12 @@ async function generateTraits(layers) {
     }
   }
 
-  const dna = sha1(`${randNum.join('-')}`);
-  const dnaBytes32 = ethers.hexlify(ethers.zeroPadValue(ethers.getBytes(`0x${dna}`), 32));
+  // const dna = sha1(`${randNum.join('-')}`);
+  const dna = ethers.hexlify(ethers.zeroPadValue(ethers.getBytes(`0x${sha1(`${randNum.join('-')}`)}`), 32));
 
-  console.log({ traitTypes, values, dnaBytes32 });
+  console.log({ traitTypes, values, dna });
 
-  return { traitTypes, values, dnaBytes32 };
+  return { traitTypes, values, dna };
 }
 
 // const layers = {

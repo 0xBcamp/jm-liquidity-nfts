@@ -46,6 +46,10 @@ export default function DepositToPairCard({
   token1: Address | undefined;
   lpnftPairAddress: Address | undefined;
 }) {
+  console.log("token0:", token0);
+  console.log("token1:", token1);
+  console.log("lpnftPairAddress:", lpnftPairAddress);
+
   // Setup state Variables
   const [token0Transfered, setToken0Transfered] = useState(false);
   const [token1Transfered, setToken1Transfered] = useState(false);
