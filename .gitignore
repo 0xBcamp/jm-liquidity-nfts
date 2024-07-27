@@ -4,3 +4,4 @@
 metadata-generator/.env
 frontend/.env
 frontend/.env
+/nft-viewer/node_modules

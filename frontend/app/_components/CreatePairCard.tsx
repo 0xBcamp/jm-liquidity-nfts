@@ -133,6 +133,24 @@ export default function CreatePairCard({
     return pairAddress ? (pairAddress as Address) : undefined;
   }
 
+  async function fetchPair(formValues: CreatePairValues) {
+    try {
+      const pairAddress = await getPair(formValues.tokenA as Address, formValues.tokenB as Address);
+      if (pairAddress) {
+        setPair(pairAddress);
+        setToken1(formValues.tokenB as Address);
+        setToken0(formValues.tokenA as Address);
+        console.log("Fetched pair address:", pairAddress);
+        console.log("Token A:", formValues.tokenA);
+        console.log("Token B:", formValues.tokenB);
+      } else {
+        console.error("Pair not found");
+      }
+    } catch (error) {
+      console.error("Error fetching pair:", error);
+    }
+  }  
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
@@ -251,6 +269,12 @@ export default function CreatePairCard({
               />
               <Button disabled={isPending} type="submit" className="w-full">
                 {isPending ? "Confirming..." : "Create Pair"}
+              </Button>
+              <Button disabled={isPending} type="button"
+                onClick={form.handleSubmit(fetchPair)}
+                className="w-full mt-2"
+              >
+                Fetch Pair
               </Button>
               {hash && <div>Transaction Hash: {hash}</div>}
               {error && (

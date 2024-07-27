@@ -46,9 +46,9 @@ export default function DepositToPairCard({
   token1: Address | undefined;
   lpnftPairAddress: Address | undefined;
 }) {
-  console.log("token0:", token0);
-  console.log("token1:", token1);
-  console.log("lpnftPairAddress:", lpnftPairAddress);
+  // console.log("token0:", token0);
+  // console.log("token1:", token1);
+  // console.log("lpnftPairAddress:", lpnftPairAddress);
 
   // Setup state Variables
   const [token0Transfered, setToken0Transfered] = useState(false);
@@ -127,20 +127,6 @@ export default function DepositToPairCard({
     return data;
   }
 
-  // Deposits liquidity to the pair
-  async function depositLiquidity(data: DepositToPairValues) {
-    setCompleted(false);
-    let tx0 = undefined;
-    let tx1 = undefined;
-
-    if (data.amount != 0 && !token0Transfered) {
-      tx0 = await transferToken0(data.amount).catch((e) => reset());
-    }
-    if (data.amount != 0 && !token1Transfered) {
-      tx1 = await transferToken1(data.amount).catch((e) => reset());
-    }
-  }
-
   // Mints LP404
   async function mint() {
     setStatus(Status["Minting"]);
@@ -159,6 +145,46 @@ export default function DepositToPairCard({
       setStatus(Status["Idle"]);
       setCompletedHash(data);
       setCompleted(true);
+    }
+  }
+
+  // Deposits liquidity to the pair
+  async function depositLiquidityOLD(data: DepositToPairValues) {
+    setCompleted(false);
+    let tx0 = undefined;
+    let tx1 = undefined;
+
+    if (data.amount != 0 && !token0Transfered) {
+      tx0 = await transferToken0(data.amount).catch((e) => reset());
+    }
+    if (data.amount != 0 && !token1Transfered) {
+      tx1 = await transferToken1(data.amount).catch((e) => reset());
+    }
+
+    if (tx0 && tx1) {
+      await mint();
+    }
+  }
+
+  async function depositLiquidity(data: DepositToPairValues) {
+    setCompleted(false);
+    setToken0Transfered(false);
+    setToken1Transfered(false);
+    setStatus(Status["Idle"]);
+  
+    if (data.amount != 0) {
+      try {
+        if (!token0Transfered) {
+          await transferToken0(data.amount);
+        }
+        if (!token1Transfered) {
+          await transferToken1(data.amount);
+        }
+        await mint();
+      } catch (error) {
+        console.error("Error during deposit:", error);
+        reset();
+      }
     }
   }
 
@@ -197,16 +223,17 @@ export default function DepositToPairCard({
                     "Transferring Token0...") ||
                     (status === Status["Transferring Token1"] &&
                       "Transferring Token1...") ||
+                    (status === Status["Minting"] && "Minting...") ||
                     (status === Status["Idle"] && "Deposit") ||
                     "Deposit"}
                 </Button>
-                <Button
+                {/* <Button
                   disabled={isPending}
                   onClick={mint}
                   className="w-full bg-blue-600"
                 >
                   {status === Status.Minting ? "Minting..." : "Mint"}
-                </Button>
+                </Button> */}
               </div>
               <div className="w-full">
                 {completed && completedHash && (

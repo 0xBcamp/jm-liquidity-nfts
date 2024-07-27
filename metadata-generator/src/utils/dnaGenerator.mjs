@@ -90,65 +90,11 @@ async function generateTraits(layers) {
     }
   }
 
-  // const dna = sha1(`${randNum.join('-')}`);
   const dna = ethers.hexlify(ethers.zeroPadValue(ethers.getBytes(`0x${sha1(`${randNum.join('-')}`)}`), 32));
 
-  console.log({ traitTypes, values, dna });
+  // console.log({ traitTypes, values, dna });
 
   return { traitTypes, values, dna };
 }
-
-// const layers = {
-//   Body: [
-//     '0_Body_ScalesBeta#Common.png',      
-//     '0_Body_ScalesForked#Common.png',    
-//     '0_Body_ScalesLunate#Common.png',    
-//     '0_Body_SmoothBeta#Rare.png',        
-//     '0_Body_SmoothForked#Epic.png',      
-//     '0_Body_SmoothLunate#Legendary.png'  
-//   ],
-//   Arms: [
-//     '1_Arms_FidlerClaws#Rare.png',       
-//     '1_Arms_FinArms#Common.png',
-//     '1_Arms_LobsterClaws#Rare.png',      
-//     '1_Arms_LureArms#Epic.png',
-//     '1_Arms_TentacleArms#Legendary.png', 
-//     '1_Arms_TurtleArms#Uncommon.png'     
-//   ],
-//   Back: [
-//     '2_Back_Blowhole#Epic.png',
-//     '2_Back_DolphinFin#Uncommon.png',    
-//     '2_Back_DorsalFins#Common.png',      
-//     '2_Back_SharkFin#Rare.png',
-//     '2_Back_StrapOnShark#Legendary.png'  
-//   ],
-//   Head: [
-//     '3_Head_FishHead#Common.png',        
-//     '4_Head_AnglerEyes#Mythic.png',      
-//     '4_Head_BaseEyes#Common.png',        
-//     '4_Head_EyeScar#Uncommon.png',       
-//     '4_Head_LobsterEye#Rare.png',        
-//     '4_Head_SharkEyes#Epic.png',
-//     '4_Head_ThreeEyes#Legendary.png'     
-//   ],
-//   Legs: [
-//     '5_Legs_FinLegs#Common.png',
-//     '5_Legs_LobsterLegs#Rare.png',       
-//     '5_Legs_LureLegs#Epic.png',
-//     '5_Legs_TentacleLegs#Legendary.png', 
-//     '5_Legs_TurtleLegs#Mythic.png'       
-//   ],
-//   Mouth: [
-//     '6_Mouth_AnglerMouth#Epic.png',      
-//     '6_Mouth_BaseMouth#Common.png',      
-//     '6_Mouth_CatfishMouth#Legendary.png',
-//     '6_Mouth_SwordfishMouth#Rare.png',   
-//     '6_Mouth_TurtleBeak#Mythic.png'      
-//   ]
-// };
-
-// (async () => {
-//   await generateTraits(layers);
-// })();
 
 export default generateTraits;
