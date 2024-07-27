@@ -1,10 +1,11 @@
 
-require('dotenv').config();
+const { config } = require('dotenv');
+const tokenAbi = require('../smart-contracts/artifacts/contracts/extensions/LP404.sol/LP404.json');
+
+config();
 
 module.exports = {
-    PORT : process.env.PORT,
-    MODE_SEPOLIA_RPC_URL: process.env.MODE_SEPOLIA_RPC_URL,
-    CONTRACT_ADDRESS: process.env.CONTRACT_ADDRESS,
-    ABI: JSON.parse(process.env.ABI),
-    IPFS_CID: process.env.IPFS_CID  
+    PORT: process.env.PORT,
+    MODE_RPC: process.env.MODE_TESTNET_RPC,
+    ABI: tokenAbi.abi
 };

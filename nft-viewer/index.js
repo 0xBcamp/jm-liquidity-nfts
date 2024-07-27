@@ -11,11 +11,11 @@ app.get('/nft-viewer/:contractAddress/:tokenId', async (req, res) => {
 
     try {
         // Fetch token attributes
-        const { attributes, dna } = await getTokenAttributes(tokenId);
+        const { attributes, dna, traitCID } = await getTokenAttributes(contractAddress, tokenId);
 
         // Fetch trait images from IPFS in order
         const traitImages = await Promise.all(
-            attributes.map(attr => fetchTraitImageFromIPFS(attr.trait_type, attr.value))
+            attributes.map(attr => fetchTraitImageFromIPFS(traitCID, attr.value))
         );
 
         // Layer the trait images together
