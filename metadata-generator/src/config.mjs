@@ -1,44 +1,83 @@
 import { config } from 'dotenv';
 import { ethers } from 'ethers';
-import { createHelia } from 'helia';
-import { verifiedFetch } from '@helia/verified-fetch';
-import abi from '../../smart-contracts/artifacts/contracts/LPNFTFactory.sol/LPNFTFactory.json' assert { type: 'json' };
+import axios from 'axios';
+import factoryAbi from '../../smart-contracts/artifacts/contracts/extensions/LP404Factory.sol/LP404Factory.json' assert { type: 'json' };
+import tokenAbi from '../../smart-contracts/artifacts/contracts/extensions/LP404.sol/LP404.json' assert { type: 'json' };
 
-// Load environment variables
 config();
 
 // Initialize ethers provider
 // const provider = new ethers.providers.JsonRpcProvider(process.env.MODE_MAINNET_RPC);
 const provider = new ethers.JsonRpcProvider(process.env.MODE_TESTNET_RPC);
 
-// Initialize Helia client for IPFS
-const helia = createHelia();
-const fetchIPFS = verifiedFetch(helia);
-
 // Contract configuration
-const contractAddress = process.env.CONTRACT_ADDRESS;
-const contract = new ethers.Contract(contractAddress, abi.abi, provider);
+const lp404FactoryAddress = '0xd0fdc365de3CB8C0Ef2A3Cf871a187A487829Cde';
+const factoryContract = new ethers.Contract(lp404FactoryAddress, factoryAbi.abi, provider);
 
-// Function to fetch directory structure from IPFS
-async function fetchIPFSStructure(cid) {
-  const structure = {};
-  for await (const file of fetchIPFS(cid)) {
-    const parts = file.split('/');
-    if (parts.length > 1) {
-      const [folder, trait] = parts;
-      if (!structure[folder]) {
-        structure[folder] = { traits: [] };
-      }
-      structure[folder].traits.push(trait);
-    }
+// Pinata gateway URL
+// const gatewayUrl = 'https://gateway.pinata.cloud/ipfs/';
+const gatewayUrl = `https://${process.env.CLIENT_ID}.ipfscdn.io/ipfs/`;
+
+// Helper to catch errors when fetching files
+async function fetchFile(url) {
+  try {
+    const response = await axios.get(url);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching file:', error);
+    throw error;
   }
-  return structure;
-  /** 
-   * @Ricky, still need to implement full getElements logic here to pull relevent data
-   * As is, this will just be file and folder names, but you need to break down
-   * layersOrder, weights, etc. Pull logic from main engine and adjust. 
-  */
 }
 
-export { provider, helia, contract, fetchIPFSStructure };
+// Function to list files from CID
+async function listFiles(cid) {
+  try {
+    const url = `${gatewayUrl}${cid}`;
+    const data = await fetchFile(url);
 
+    const files = [];
+    const regex = /<a\s+href="([^"]+)">([^<]+)<\/a>/g;
+    let match;
+
+    while ((match = regex.exec(data)) !== null) {
+      const filename = match[2];
+      // Exclude the CID itself and ensure the filename is not empty
+      if (filename !== cid && filename !== '' && match[1].startsWith('/ipfs/')) {
+        files.push(filename);
+      }
+    }
+
+    return files;
+  } catch (error) {
+    console.error('Error listing files:', error);
+    throw error;
+  }
+}
+
+async function fetchLayers(cid) {
+  const files = await listFiles(cid);
+  const structure = {};
+
+  // Organize files into separate elements for each layer
+  // NOTE: requires names to be formatted properly as index_layerName_traitName#weight.png
+  for (const file of files) {
+    const parts = file.split('_');
+    if (parts.length > 1) {
+      const layer = parts[1];
+      if (!structure[layer]) {
+        structure[layer] = [];
+      }
+      structure[layer].push(file);
+    }
+  }
+
+  // console.log(structure);
+  return structure;
+}
+
+// (async () => {
+//   const cid = 'QmWoVDtbCvHTfmEFDdRpijFuxXWbNXVaBSs9eaS13sFfp6'; // Replace with your CID
+//   await fetchLayers(cid);
+// })();
+
+export { provider, factoryContract, tokenAbi, fetchLayers };

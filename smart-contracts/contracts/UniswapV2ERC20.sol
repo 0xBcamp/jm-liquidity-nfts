@@ -38,13 +38,13 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         );
     }
 
-    function _mint(address to, uint value) internal {
+    function _mint(address to, uint value) internal virtual {
         totalSupply = totalSupply.add(value);
         balanceOf[to] = balanceOf[to].add(value);
         emit Transfer(address(0), to, value);
     }
 
-    function _burn(address from, uint value) internal {
+    function _burn(address from, uint value) internal virtual {
         balanceOf[from] = balanceOf[from].sub(value);
         totalSupply = totalSupply.sub(value);
         emit Transfer(from, address(0), value);
@@ -69,7 +69,10 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
         return true;
     }
 
-    function transfer(address to, uint value) external override returns (bool) {
+    function transfer(
+        address to,
+        uint value
+    ) external virtual override returns (bool) {
         _transfer(msg.sender, to, value);
         return true;
     }

@@ -2,3 +2,7 @@
 /smart-contracts/node_modules
 /metadata-generator/node_modules
 metadata-generator/.env
+frontend/.env
+frontend/.env
+/nft-viewer/node_modules
+nft-viewer/.env

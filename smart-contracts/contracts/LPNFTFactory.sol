@@ -102,7 +102,7 @@ contract KimLPNFTFactory is IKimFactory {
         }
         require(pair != address(0), "KimFactory: FAILED");
         KimLPNFTPair(pair).initialize(token0, token1);
-        ILP404(lp404).setPair(pair);
+        ILP404(lp404).initialize(lp404Factory, pair);
         getPair[token0][token1] = pair;
         getPair[token1][token0] = pair; // populate mapping in the reverse direction
         allPairs.push(pair);
