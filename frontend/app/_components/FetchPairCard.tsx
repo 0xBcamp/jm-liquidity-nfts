@@ -148,9 +148,9 @@ export default function FetchPairCard({
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Fetch Existing LPNFT Pair</CardTitle>
+        <CardTitle className="text-2xl">Fetch Existing LP_NFT Pair</CardTitle>
         <CardDescription>
-          Enter ERC20 token addresses to fetch the LPNFT pair.
+          Enter ERC20 addresses to fetch the LP_NFT pair.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -165,7 +165,7 @@ export default function FetchPairCard({
                     <FormItem>
                       <FormLabel>Token A</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -179,7 +179,7 @@ export default function FetchPairCard({
                     <FormItem>
                       <FormLabel>Token B</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -253,7 +253,6 @@ export default function FetchPairCard({
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Enter a description of your LPNFT Token"
                         {...field}
                         disabled
                       />

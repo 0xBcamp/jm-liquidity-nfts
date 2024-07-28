@@ -38,6 +38,13 @@ export default function () {
   const [token0, setToken0] = useState<Address | undefined>(undefined);
   const [token1, setToken1] = useState<Address | undefined>(undefined);
 
+  // Add the missing state variables
+  const [name, setName] = useState<string | undefined>(undefined);
+  const [symbol, setSymbol] = useState<string | undefined>(undefined);
+  const [traitCID, setTraitCID] = useState<string | undefined>(undefined);
+  const [description, setDescription] = useState<string | undefined>(undefined);
+  const [decimals, setDecimals] = useState<number | undefined>(undefined);
+
   function _setLpnftPairAddress(value: Address | undefined) {
     setLpnftPairAddress(value);
   }
@@ -72,13 +79,18 @@ export default function () {
                     setPair={_setLpnftPairAddress}
                     setToken1={_setToken1}
                     setToken0={_setToken0}
+                    setName={setName}
+                    setSymbol={setSymbol}
+                    setTraitCID={setTraitCID}
+                    setDescription={setDescription}
+                    setDecimals={setDecimals}
                   />
                 </div>
                 <div className="col-span-1">
                   <TokenBalancesCard
-                    token0={token0}
-                    token1={token1}
-                    pair={lpnftPairAddress}
+                    token0={token0 || null}
+                    token1={token1 || null}
+                    pair={lpnftPairAddress || null}
                   />
                 </div>
                 <div className="col-span-3 grid grid-cols-2 gap-4">

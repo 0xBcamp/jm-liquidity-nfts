@@ -6,3 +6,4 @@ frontend/.env
 frontend/.env
 /nft-viewer/node_modules
 nft-viewer/.env
+frontend/.env

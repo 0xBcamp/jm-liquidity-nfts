@@ -37,6 +37,13 @@ import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import Link from "next/link";
 import { ethers } from 'ethers';
 
+enum Status {
+  "Idle",
+  "Minting",
+  "Transferring Token0",
+  "Transferring Token1",
+}
+
 export default function DepositToPairCard({
   token0,
   token1,
@@ -52,13 +59,6 @@ export default function DepositToPairCard({
   const [completed, setCompleted] = useState(false);
   const [completedHash, setCompletedHash] = useState<string | undefined>();
   const [status, setStatus] = useState<Status>(Status["Idle"]);
-
-  enum Status {
-    "Idle",
-    "Minting",
-    "Transferring Token0",
-    "Transferring Token1",
-  }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   const DepositToPairSchema = z.object({
