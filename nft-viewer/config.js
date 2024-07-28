@@ -7,5 +7,6 @@ config();
 module.exports = {
     PORT: process.env.PORT,
     MODE_RPC: process.env.MODE_TESTNET_RPC,
-    ABI: tokenAbi.abi
+    ABI: tokenAbi.abi,
+    CLIENT_ID: process.env.CLIENT_ID
 };

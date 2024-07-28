@@ -25,89 +25,60 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 // Ethereum Imports
 import { ethers } from "ethers";
-import { type BaseError, useWriteContract, useClient } from "wagmi";
+import { useClient } from "wagmi";
 import { Address } from "viem";
 import LPNFTFACTORY from "@/contracts/KimLPNFTFactory.json";
+import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
+import LP404 from "@/contracts/LP404.json";
 import { getFactoryAddress } from "@/lib/serverFunctions";
 
-export default function CreatePairCard({
+export default function FetchPairCard({
   setPair,
   setToken0,
   setToken1,
+  setName,
+  setSymbol,
+  setTraitCID,
+  setDescription,
+  setDecimals,
 }: {
   setPair: Function;
   setToken0: Function;
   setToken1: Function;
+  setName: Function;
+  setSymbol: Function;
+  setTraitCID: Function;
+  setDescription: Function;
+  setDecimals: Function;
 }) {
   // ~~~~~~~~~~~~~~~~~~~~ Setup The Form ~~~~~~~~~~~~~~~~~~~~
   // Form validation schema
   const CreatePairSchema = z.object({
     tokenA: z.string().min(32, "Invalid Address Length"),
     tokenB: z.string().min(32, "Invalid Address Length"),
-    name: z.string({ required_error: "Provide a name for the pair" }),
-    symbol: z.string({ required_error: "Provide a symbol for the pair" }),
-    traitCID: z.string({ required_error: "Provide the trait CID" }),
-    description: z.string({
-      required_error: "Provide a description of the NFT",
-    }),
-    decimals: z.number({ required_error: "Provide number of decimals" }),
+    name: z.string().optional(),
+    symbol: z.string().optional(),
+    traitCID: z.string().optional(),
+    description: z.string().optional(),
+    decimals: z.number().optional(),
   });
   type CreatePairValues = z.infer<typeof CreatePairSchema>;
   // Form object
-  const form = useForm<z.infer<typeof CreatePairSchema>>({
+  const form = useForm<CreatePairValues>({
     resolver: zodResolver(CreatePairSchema),
     defaultValues: {
-      tokenA: "0x5Ce0d5186575FaeEBe56F9Db7c3559Ff05A90191",
-      tokenB: "0x804fAeEC0ce2712c4C954a8C4d7b6fd21B7C749F",
-      name: "Test",
-      symbol: "TST",
-      traitCID: "Whatever",
-      description: "This is a cool test",
-      decimals: 18,
+      tokenA: "",
+      tokenB: "",
+      name: "",
+      symbol: "",
+      traitCID: "",
+      description: "",
+      decimals: undefined,
     },
   });
 
   // ~~~~~~~~~~~~~~~~~~~~ Setup Interactions ~~~~~~~~~~~~~~~~~~~~
-  const {
-    data: hash,
-    writeContractAsync,
-    isPending,
-    error,
-  } = useWriteContract();
   const client = useClient();
-
-  // Creates a Pair
-  async function createPair(formValues: CreatePairValues) {
-    // Get the factory address
-    const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
-    // Check if the factory address is set
-    if (!LPNFT_FACTORY_ADDRESS) {
-      throw new Error("LPNFT_FACTORY_ADDRESS not set");
-    }
-    // Create the pair
-    const pairInfo = await writeContractAsync({
-      address: LPNFT_FACTORY_ADDRESS,
-      abi: LPNFTFACTORY.abi,
-      functionName: "createPair",
-      args: [
-        formValues.tokenA as Address,
-        formValues.tokenB as Address,
-        formValues.name,
-        formValues.symbol,
-        formValues.traitCID,
-        formValues.description,
-        BigInt(formValues.decimals),
-      ],
-    }).catch((e: Error) => {
-      console.log((e as BaseError).shortMessage || e.message);
-    });
-    // Set the pair address and token addresses
-    setPair(
-      await getPair(formValues.tokenA as Address, formValues.tokenB as Address),
-    );
-    setToken1(formValues.tokenB as Address);
-    setToken0(formValues.tokenA as Address);
-  }
 
   // Gets a pair address
   async function getPair(tokenA: Address, tokenB: Address) {
@@ -133,17 +104,58 @@ export default function CreatePairCard({
     return pairAddress ? (pairAddress as Address) : undefined;
   }
 
+  // Fetch pair details and populate the form
+  async function fetchPair(formValues: CreatePairValues) {
+    try {
+      const pairAddress = await getPair(formValues.tokenA as Address, formValues.tokenB as Address);
+      if (pairAddress) {
+        if (!client) {
+          throw new Error("No connected client");
+        }
+        const url = client.chain.rpcUrls.default.http[0];
+        const provider = new ethers.JsonRpcProvider(url);
+        const pairContract = new ethers.Contract(pairAddress, LPNFTPAIR.abi, provider);
+        const lp404Address = await pairContract.lp404();
+
+        const lp404Contract = new ethers.Contract(lp404Address, LP404.abi, provider);
+        const name = await lp404Contract.name();
+        const symbol = await lp404Contract.symbol();
+        const traitCID = await lp404Contract.traitCID();
+        const description = await lp404Contract.description();
+        const decimals = await lp404Contract.decimals();
+
+        setPair(pairAddress);
+        setToken1(formValues.tokenB as Address);
+        setToken0(formValues.tokenA as Address);
+
+        form.setValue('name', name);
+        form.setValue('symbol', symbol);
+        form.setValue('traitCID', traitCID);
+        form.setValue('description', description);
+        form.setValue('decimals', Number(decimals));
+
+        console.log("Fetched pair address:", pairAddress);
+        console.log("Token A:", formValues.tokenA);
+        console.log("Token B:", formValues.tokenB);
+      } else {
+        console.error("Pair not found");
+      }
+    } catch (error) {
+      console.error("Error fetching pair:", error);
+    }
+  }
+
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Create New LPNFT Pair</CardTitle>
+        <CardTitle className="text-2xl">Fetch Existing LPNFT Pair</CardTitle>
         <CardDescription>
-          Enter your information to create a pair
+          Enter ERC20 token addresses to fetch the LPNFT pair.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(createPair)}>
+          <form onSubmit={form.handleSubmit(fetchPair)}>
             <div className="grid gap-4">
               <div className="grid grid-cols-2 gap-4">
                 <FormField
@@ -182,7 +194,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,7 +208,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Symbol</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -212,7 +224,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Trait CID</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -226,7 +238,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Decimals</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input type="number" {...field} disabled />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -243,21 +255,16 @@ export default function CreatePairCard({
                       <Textarea
                         placeholder="Enter a description of your LPNFT Token"
                         {...field}
+                        disabled
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button disabled={isPending} type="submit" className="w-full">
-                {isPending ? "Confirming..." : "Create Pair"}
+              <Button type="button" onClick={form.handleSubmit(fetchPair)} className="w-full mt-2">
+                Fetch Pair
               </Button>
-              {hash && <div>Transaction Hash: {hash}</div>}
-              {error && (
-                <div>
-                  Error: {(error as BaseError).shortMessage || error.message}
-                </div>
-              )}
             </div>
           </form>
         </Form>

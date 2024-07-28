@@ -28,7 +28,6 @@ import { z } from "zod";
 // Ethereum Imports
 import { Address } from "viem";
 import {
-  useWaitForTransactionReceipt,
   useWriteContract,
   useAccount,
   type BaseError,
@@ -36,6 +35,7 @@ import {
 import ERC20 from "@/contracts/ERC20.json";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import Link from "next/link";
+import { ethers } from 'ethers';
 
 export default function DepositToPairCard({
   token0,
@@ -46,10 +46,6 @@ export default function DepositToPairCard({
   token1: Address | undefined;
   lpnftPairAddress: Address | undefined;
 }) {
-  // console.log("token0:", token0);
-  // console.log("token1:", token1);
-  // console.log("lpnftPairAddress:", lpnftPairAddress);
-
   // Setup state Variables
   const [token0Transfered, setToken0Transfered] = useState(false);
   const [token1Transfered, setToken1Transfered] = useState(false);
@@ -74,12 +70,12 @@ export default function DepositToPairCard({
   const depositForm = useForm<z.infer<typeof DepositToPairSchema>>({
     resolver: zodResolver(DepositToPairSchema),
     defaultValues: {
-      amount: 10,
+      amount: 1,
     },
   });
   type DepositToPairValues = z.infer<typeof DepositToPairSchema>;
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ethereum Iteractions setup ~~~~~~~~~~~~~~~~~~~~~~~~~
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ethereum Interactions setup ~~~~~~~~~~~~~~~~~~~~~~~~~
   const {
     data: hash,
     writeContractAsync,
@@ -102,7 +98,7 @@ export default function DepositToPairCard({
       address: token0 as Address,
       abi: ERC20,
       functionName: "transfer",
-      args: [lpnftPairAddress, BigInt(amount) * BigInt(10) ** BigInt(18)],
+      args: [lpnftPairAddress, ethers.parseUnits(amount.toString(), 18)],
     });
     if (data) {
       setToken0Transfered(true);
@@ -118,7 +114,7 @@ export default function DepositToPairCard({
       address: token1 as Address,
       abi: ERC20,
       functionName: "transfer",
-      args: [lpnftPairAddress, BigInt(amount) * BigInt(10) ** BigInt(18)],
+      args: [lpnftPairAddress, ethers.parseUnits(amount.toString(), 18)],
     });
     if (data) {
       setToken1Transfered(true);
@@ -130,7 +126,6 @@ export default function DepositToPairCard({
   // Mints LP404
   async function mint() {
     setStatus(Status["Minting"]);
-    // Change to && if you want to transfer both tokens before minting
     // Mint LP404 from the pair to the user
     const data = await writeContractAsync({
       address: lpnftPairAddress as Address,
@@ -149,23 +144,6 @@ export default function DepositToPairCard({
   }
 
   // Deposits liquidity to the pair
-  async function depositLiquidityOLD(data: DepositToPairValues) {
-    setCompleted(false);
-    let tx0 = undefined;
-    let tx1 = undefined;
-
-    if (data.amount != 0 && !token0Transfered) {
-      tx0 = await transferToken0(data.amount).catch((e) => reset());
-    }
-    if (data.amount != 0 && !token1Transfered) {
-      tx1 = await transferToken1(data.amount).catch((e) => reset());
-    }
-
-    if (tx0 && tx1) {
-      await mint();
-    }
-  }
-
   async function depositLiquidity(data: DepositToPairValues) {
     setCompleted(false);
     setToken0Transfered(false);
@@ -191,9 +169,9 @@ export default function DepositToPairCard({
   return (
     <Card className="mx-auto max-w-sm">
       <CardHeader>
-        <CardTitle className="text-2xl">Deposit from LPNFT Pair</CardTitle>
+        <CardTitle className="text-2xl">Deposit to LPNFT Pair</CardTitle>
         <CardDescription>
-          Enter amount you wish to deposit from the Pair.
+          Enter amount you wish to deposit to the Pair.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -207,7 +185,7 @@ export default function DepositToPairCard({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>{" "}
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" step="any" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -227,13 +205,6 @@ export default function DepositToPairCard({
                     (status === Status["Idle"] && "Deposit") ||
                     "Deposit"}
                 </Button>
-                {/* <Button
-                  disabled={isPending}
-                  onClick={mint}
-                  className="w-full bg-blue-600"
-                >
-                  {status === Status.Minting ? "Minting..." : "Mint"}
-                </Button> */}
               </div>
               <div className="w-full">
                 {completed && completedHash && (

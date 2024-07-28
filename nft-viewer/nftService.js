@@ -1,7 +1,7 @@
 const axios = require('axios');
 // const { Web3 } = require('web3'); // Import Web3 library
 const { ethers } = require('ethers');
-const { MODE_RPC, ABI, IPFS_CID} = require('./config');  
+const { MODE_RPC, ABI, CLIENT_ID} = require('./config');  
 
 // const web3 = new Web3(new Web3.providers.HttpProvider(MODE_SEPOLIA_RPC_URL));
 // const contract = new web3.eth.Contract(ABI, CONTRACT_ADDRESS);
@@ -26,7 +26,7 @@ async function getTokenAttributes(contractAddress, tokenId) {
 }
 
 // Pinata gateway URL
-const gatewayUrl = 'https://ipfs.io/ipfs/';
+const gatewayUrl = `https://${CLIENT_ID}.ipfscdn.io/ipfs/`;
 
 // Helper to catch errors when fetching files
 async function fetchFile(url) {

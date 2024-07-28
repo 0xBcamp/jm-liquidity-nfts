@@ -15,7 +15,8 @@ const lp404FactoryAddress = '0xd0fdc365de3CB8C0Ef2A3Cf871a187A487829Cde';
 const factoryContract = new ethers.Contract(lp404FactoryAddress, factoryAbi.abi, provider);
 
 // Pinata gateway URL
-const gatewayUrl = 'https://gateway.pinata.cloud/ipfs/';
+// const gatewayUrl = 'https://gateway.pinata.cloud/ipfs/';
+const gatewayUrl = `https://${process.env.CLIENT_ID}.ipfscdn.io/ipfs/`;
 
 // Helper to catch errors when fetching files
 async function fetchFile(url) {

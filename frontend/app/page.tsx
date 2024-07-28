@@ -1,6 +1,8 @@
 "use client";
 
 import CreatePairCard from "./_components/CreatePairCard";
+import FetchPairCard from "./_components/FetchPairCard";
+import TokenBalancesCard from "./_components/TokenBalancesCard";
 import React, { useState } from "react";
 import WithdrawFromPairCard from "./_components/WithdrawFromPairCard";
 import DepositToPairCard from "./_components/DepositToPairCard";
@@ -57,23 +59,37 @@ export default function () {
               </nav>
             </header>
             <main className="w-full flex flex-col justify-center items-center">
-              <section className="max-w-screen-lg grid grid-cols-8 gap-4">
-                <div className="col-span-4">
+              <section className="max-w-screen-lg grid grid-cols-3 gap-4">
+                <div className="col-span-1">
                   <CreatePairCard
                     setPair={_setLpnftPairAddress}
                     setToken1={_setToken1}
                     setToken0={_setToken0}
                   />
                 </div>
-                <div className="flex flex-col gap-4 col-span-4">
-                  <div className="col-span-full">
+                <div className="col-span-1">
+                  <FetchPairCard
+                    setPair={_setLpnftPairAddress}
+                    setToken1={_setToken1}
+                    setToken0={_setToken0}
+                  />
+                </div>
+                <div className="col-span-1">
+                  <TokenBalancesCard
+                    token0={token0}
+                    token1={token1}
+                    pair={lpnftPairAddress}
+                  />
+                </div>
+                <div className="col-span-3 grid grid-cols-2 gap-4">
+                  <div className="col-span-1">
                     <DepositToPairCard
                       token0={token0 || ("" as Address)}
                       token1={token1 || ("" as Address)}
                       lpnftPairAddress={lpnftPairAddress}
                     />
                   </div>
-                  <div className="col-span-full">
+                  <div className="col-span-1">
                     <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
                 </div>
