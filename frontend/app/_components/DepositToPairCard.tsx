@@ -27,15 +27,18 @@ import { z } from "zod";
 
 // Ethereum Imports
 import { Address } from "viem";
-import {
-  useWriteContract,
-  useAccount,
-  type BaseError,
-} from "wagmi";
+import { useWriteContract, useAccount, type BaseError } from "wagmi";
 import ERC20 from "@/contracts/ERC20.json";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import Link from "next/link";
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
+
+enum Status {
+  "Idle",
+  "Minting",
+  "Transferring Token0",
+  "Transferring Token1",
+}
 
 export default function DepositToPairCard({
   token0,
@@ -53,13 +56,6 @@ export default function DepositToPairCard({
   const [completedHash, setCompletedHash] = useState<string | undefined>();
   const [status, setStatus] = useState<Status>(Status["Idle"]);
 
-  enum Status {
-    "Idle",
-    "Minting",
-    "Transferring Token0",
-    "Transferring Token1",
-  }
-
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   const DepositToPairSchema = z.object({
     amount: z.coerce
@@ -76,12 +72,7 @@ export default function DepositToPairCard({
   type DepositToPairValues = z.infer<typeof DepositToPairSchema>;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ethereum Interactions setup ~~~~~~~~~~~~~~~~~~~~~~~~~
-  const {
-    data: hash,
-    writeContractAsync,
-    isPending,
-    error,
-  } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useWriteContract();
   const account = useAccount();
 
   // Helper functions
@@ -145,11 +136,11 @@ export default function DepositToPairCard({
 
   // Deposits liquidity to the pair
   async function depositLiquidity(data: DepositToPairValues) {
-    setCompleted(false);
-    setToken0Transfered(false);
-    setToken1Transfered(false);
-    setStatus(Status["Idle"]);
-  
+    // setCompleted(false);
+    // setToken0Transfered(false);
+    // setToken1Transfered(false);
+    // setStatus(Status["Idle"]);
+
     if (data.amount != 0) {
       try {
         if (!token0Transfered) {

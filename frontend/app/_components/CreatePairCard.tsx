@@ -134,7 +134,7 @@ export default function CreatePairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-sm lg:max-w-lg">
       <CardHeader>
         <CardTitle className="text-2xl">Create New LPNFT Pair</CardTitle>
         <CardDescription>
@@ -265,3 +265,4 @@ export default function CreatePairCard({
     </Card>
   );
 }
+

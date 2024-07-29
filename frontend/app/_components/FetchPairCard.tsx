@@ -22,7 +22,9 @@ import { Textarea } from "@/components/ui/textarea";
 // Form Validation Imports
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { z } from "zod";
+import { PairDetails } from "@/app/page";
 // Ethereum Imports
 import { ethers } from "ethers";
 import { useClient } from "wagmi";
@@ -33,27 +35,21 @@ import LP404 from "@/contracts/LP404.json";
 import { getFactoryAddress } from "@/lib/serverFunctions";
 
 export default function FetchPairCard({
-  setPair,
+  setPairAddress,
   setToken0,
   setToken1,
-  setName,
-  setSymbol,
-  setTraitCID,
-  setDescription,
-  setDecimals,
+  setPairDetails,
+  pairDetails,
 }: {
-  setPair: Function;
+  setPairAddress: Function;
   setToken0: Function;
   setToken1: Function;
-  setName: Function;
-  setSymbol: Function;
-  setTraitCID: Function;
-  setDescription: Function;
-  setDecimals: Function;
+  setPairDetails: Function;
+  pairDetails: PairDetails | undefined;
 }) {
   // ~~~~~~~~~~~~~~~~~~~~ Setup The Form ~~~~~~~~~~~~~~~~~~~~
   // Form validation schema
-  const CreatePairSchema = z.object({
+  const FetchPairSchema = z.object({
     tokenA: z.string().min(32, "Invalid Address Length"),
     tokenB: z.string().min(32, "Invalid Address Length"),
     name: z.string().optional(),
@@ -62,23 +58,25 @@ export default function FetchPairCard({
     description: z.string().optional(),
     decimals: z.number().optional(),
   });
-  type CreatePairValues = z.infer<typeof CreatePairSchema>;
+  type FetchPairValues = z.infer<typeof FetchPairSchema>;
   // Form object
-  const form = useForm<CreatePairValues>({
-    resolver: zodResolver(CreatePairSchema),
+  const form = useForm<FetchPairValues>({
+    resolver: zodResolver(FetchPairSchema),
     defaultValues: {
-      tokenA: "",
-      tokenB: "",
-      name: "",
-      symbol: "",
-      traitCID: "",
-      description: "",
-      decimals: undefined,
+      tokenA: pairDetails?.tokenA || "",
+      tokenB: pairDetails?.tokenB || "",
+      name: pairDetails?.name || "",
+      symbol: pairDetails?.symbol || "",
+      traitCID: pairDetails?.traitCID || "",
+      description: pairDetails?.description || "",
+      decimals: pairDetails?.decimals || 0,
     },
   });
 
   // ~~~~~~~~~~~~~~~~~~~~ Setup Interactions ~~~~~~~~~~~~~~~~~~~~
   const client = useClient();
+  const [foundPair, setFoundPair] = useState(pairDetails && true);
+  const [isPending, setIsPending] = useState(false);
 
   // Gets a pair address
   async function getPair(tokenA: Address, tokenB: Address) {
@@ -105,48 +103,65 @@ export default function FetchPairCard({
   }
 
   // Fetch pair details and populate the form
-  async function fetchPair(formValues: CreatePairValues) {
+  async function fetchPair(formValues: FetchPairValues) {
     try {
-      const pairAddress = await getPair(formValues.tokenA as Address, formValues.tokenB as Address);
+      setFoundPair(false);
+      setIsPending(true);
+      const pairAddress = await getPair(
+        formValues.tokenA as Address,
+        formValues.tokenB as Address,
+      );
       if (pairAddress) {
         if (!client) {
           throw new Error("No connected client");
         }
         const url = client.chain.rpcUrls.default.http[0];
         const provider = new ethers.JsonRpcProvider(url);
-        const pairContract = new ethers.Contract(pairAddress, LPNFTPAIR.abi, provider);
+        const pairContract = new ethers.Contract(
+          pairAddress,
+          LPNFTPAIR.abi,
+          provider,
+        );
         const lp404Address = await pairContract.lp404();
 
-        const lp404Contract = new ethers.Contract(lp404Address, LP404.abi, provider);
+        const lp404Contract = new ethers.Contract(
+          lp404Address,
+          LP404.abi,
+          provider,
+        );
         const name = await lp404Contract.name();
         const symbol = await lp404Contract.symbol();
         const traitCID = await lp404Contract.traitCID();
         const description = await lp404Contract.description();
         const decimals = await lp404Contract.decimals();
 
-        setPair(pairAddress);
+        setPairAddress(pairAddress);
         setToken1(formValues.tokenB as Address);
         setToken0(formValues.tokenA as Address);
 
-        form.setValue('name', name);
-        form.setValue('symbol', symbol);
-        form.setValue('traitCID', traitCID);
-        form.setValue('description', description);
-        form.setValue('decimals', Number(decimals));
+        form.setValue("name", name);
+        form.setValue("symbol", symbol);
+        form.setValue("traitCID", traitCID);
+        form.setValue("description", description);
+        form.setValue("decimals", Number(decimals));
 
         console.log("Fetched pair address:", pairAddress);
         console.log("Token A:", formValues.tokenA);
         console.log("Token B:", formValues.tokenB);
+        setFoundPair(true);
+        setPairDetails(form.getValues);
       } else {
         console.error("Pair not found");
       }
     } catch (error) {
       console.error("Error fetching pair:", error);
+    } finally {
+      setIsPending(false);
     }
   }
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto max-w-sm lg:max-w-lg">
       <CardHeader>
         <CardTitle className="text-2xl">Fetch Existing LPNFT Pair</CardTitle>
         <CardDescription>
@@ -186,84 +201,100 @@ export default function FetchPairCard({
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <span
+                className={(!foundPair ? "hidden" : "grid gap-3") + " mt-6"}
+              >
+                <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight mb-2">
+                  Pair Details
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="symbol"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Symbol</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="symbol"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Symbol</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="traitCID"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Trait CID</FormLabel>
-                      <FormControl>
-                        <Input {...field} disabled />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="traitCID"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Trait CID</FormLabel>
+                        <FormControl>
+                          <Input {...field} disabled />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={form.control}
+                    name="decimals"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Decimals</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} disabled />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
-                  name="decimals"
+                  name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Decimals</FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} disabled />
+                        <Textarea
+                          placeholder="Enter a description of your LPNFT Token"
+                          {...field}
+                          disabled
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Enter a description of your LPNFT Token"
-                        {...field}
-                        disabled
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="button" onClick={form.handleSubmit(fetchPair)} className="w-full mt-2">
-                Fetch Pair
+              </span>
+              <Button
+                type="button"
+                onClick={form.handleSubmit(fetchPair)}
+                className="w-full mt-2"
+                disabled={isPending}
+              >
+                {isPending
+                  ? "Fetching..."
+                  : foundPair
+                    ? "Fetch New Pair"
+                    : "Fetch Pair"}
               </Button>
             </div>
           </form>

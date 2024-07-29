@@ -1,25 +1,36 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { ethers } from 'ethers';
-import { useAccount } from 'wagmi';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import ERC20 from '@/contracts/ERC20.json';
+import React, { useEffect, useState, useCallback } from "react";
+import { ethers } from "ethers";
+import { useAccount } from "wagmi";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import ERC20 from "@/contracts/ERC20.json";
+import { Address } from "viem";
 
 interface TokenBalancesCardProps {
-  token0: string | null;
-  token1: string | null;
-  pair: string | null;
+  token0: Address | undefined;
+  token1: Address | undefined;
+  pair: Address | undefined;
 }
 
-const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, pair }) => {
+const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
+  token0,
+  token1,
+  pair,
+}) => {
   const { address } = useAccount();
   const [balances, setBalances] = useState({
-    token0: '0',
-    token1: '0',
-    pair: '0',
-    pairNFT: '0'
+    token0: "0",
+    token1: "0",
+    pair: "0",
+    pairNFT: "0",
   });
 
   const fetchBalances = useCallback(async () => {
@@ -38,14 +49,16 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, p
     const decimals1 = await erc20Contract1.decimals();
     const decimalsPair = await pairContract.decimals();
 
-    const formattedBalancePair = parseFloat(ethers.formatUnits(balancePair, decimalsPair));
+    const formattedBalancePair = parseFloat(
+      ethers.formatUnits(balancePair, decimalsPair),
+    );
     const pairNFTBalance = Math.floor(formattedBalancePair);
 
     setBalances({
       token0: ethers.formatUnits(balance0, decimals0),
       token1: ethers.formatUnits(balance1, decimals1),
       pair: ethers.formatUnits(balancePair, decimalsPair),
-      pairNFT: pairNFTBalance.toString()
+      pairNFT: pairNFTBalance.toString(),
     });
   }, [address, token0, token1, pair]);
 
@@ -62,10 +75,30 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, p
       <CardContent>
         {token0 && token1 && pair ? (
           <div>
-            <p>Token 0 Balance: {balances.token0}</p>
-            <p>Token 1 Balance: {balances.token1}</p>
-            <p>Pair Token Balance: {balances.pair}</p>
-            <p>Pair NFT Balance: {balances.pairNFT}</p>
+            <div className="flex gap-3 items-center ">
+              <h3 className="text-md font-semibold tracking-tight">
+                Token 0 Balance:
+              </h3>
+              <p className="text-lg tracking-widest">{balances.token0}</p>
+            </div>
+            <div className="flex gap-3 items-center ">
+              <h3 className="text-md font-semibold tracking-tight">
+                Token 1 Balance:
+              </h3>
+              <p className="text-lg tracking-widest">{balances.token0}</p>
+            </div>
+            <div className="flex gap-3 items-center ">
+              <h3 className="text-md font-semibold tracking-tight">
+                Pair Token Balance:
+              </h3>
+              <p className="text-lg tracking-widest">{balances.pair}</p>
+            </div>
+            <div className="flex gap-3 items-center ">
+              <h3 className="text-md font-semibold tracking-tight">
+                Pair NFT Balance:
+              </h3>
+              <p className="text-lg tracking-widest">{balances.pairNFT}</p>
+            </div>
           </div>
         ) : (
           <p>Please create or fetch a pair to view balances.</p>
