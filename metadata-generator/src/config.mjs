@@ -8,10 +8,10 @@ config();
 
 // Initialize ethers provider
 // const provider = new ethers.providers.JsonRpcProvider(process.env.MODE_MAINNET_RPC);
-const provider = new ethers.JsonRpcProvider(process.env.MODE_TESTNET_RPC);
+const provider = new ethers.JsonRpcProvider('https://sepolia.mode.network/');
 
 // Contract configuration
-const lp404FactoryAddress = '0xd0fdc365de3CB8C0Ef2A3Cf871a187A487829Cde';
+const lp404FactoryAddress = '0xB769D1bc09534df9401B73433aE0E83888c69709';
 const factoryContract = new ethers.Contract(lp404FactoryAddress, factoryAbi.abi, provider);
 
 // Pinata gateway URL

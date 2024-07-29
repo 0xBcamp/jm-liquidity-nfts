@@ -11,9 +11,10 @@ interface TokenBalancesCardProps {
   token0: string | null;
   token1: string | null;
   pair: string | null;
+  lp404: string | null;
 }
 
-const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, pair }) => {
+const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, pair, lp404 }) => {
   const { address } = useAccount();
   const [balances, setBalances] = useState({
     token0: '0',
@@ -51,7 +52,7 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, p
 
   useEffect(() => {
     fetchBalances();
-  }, [fetchBalances]);
+  }, [fetchBalances, token0, token1, pair]);
 
   return (
     <Card className="mx-auto max-w-sm">
@@ -60,12 +61,14 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({ token0, token1, p
         <CardDescription>Connected Wallet Balances</CardDescription>
       </CardHeader>
       <CardContent>
-        {token0 && token1 && pair ? (
+        {token0 && token1 && pair && lp404 ? (
           <div>
             <p>Token 0 Balance: {balances.token0}</p>
             <p>Token 1 Balance: {balances.token1}</p>
             <p>Pair Token Balance: {balances.pair}</p>
             <p>Pair NFT Balance: {balances.pairNFT}</p>
+            <p>Pair Contract Address: {pair}</p>
+            <p>LP404 Contract Address: {lp404}</p>
           </div>
         ) : (
           <p>Please create or fetch a pair to view balances.</p>

@@ -36,6 +36,7 @@ import ERC20 from "@/contracts/ERC20.json";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import Link from "next/link";
 import { ethers } from 'ethers';
+import { useClient } from "wagmi";
 
 enum Status {
   "Idle",
@@ -59,6 +60,15 @@ export default function DepositToPairCard({
   const [completed, setCompleted] = useState(false);
   const [completedHash, setCompletedHash] = useState<string | undefined>();
   const [status, setStatus] = useState<Status>(Status["Idle"]);
+
+  const client = useClient();
+  // Check if the client is connected
+  if (!client) {
+    throw new Error("No connected client");
+  }
+  // Setup provider using ethers
+  const url = client.chain.rpcUrls.default.http[0];
+  const provider = new ethers.JsonRpcProvider(url);
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Form Setup ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   const DepositToPairSchema = z.object({
@@ -94,51 +104,69 @@ export default function DepositToPairCard({
     console.log("Token0 : ", token0);
     // Transfer token0 amount to the pair
     setStatus(Status["Transferring Token0"]);
-    const data = await writeContractAsync({
+    const txHash = await writeContractAsync({
       address: token0 as Address,
       abi: ERC20,
       functionName: "transfer",
       args: [lpnftPairAddress, ethers.parseUnits(amount.toString(), 18)],
     });
-    if (data) {
+
+    if (!txHash) {
+      throw new Error("Transaction failed for token0 transfer");
+    }
+
+    const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
+    if (receipt && receipt.status === 1) {
       setToken0Transfered(true);
       setStatus(Status["Idle"]);
     }
-    return data;
+    return receipt;
   }
+
   async function transferToken1(amount: number) {
     console.log("Token1 : ", token1);
     // Transfer token1 amount to the pair
     setStatus(Status["Transferring Token1"]);
-    const data = await writeContractAsync({
+    const txHash = await writeContractAsync({
       address: token1 as Address,
       abi: ERC20,
       functionName: "transfer",
       args: [lpnftPairAddress, ethers.parseUnits(amount.toString(), 18)],
     });
-    if (data) {
+
+    if (!txHash) {
+      throw new Error("Transaction failed for token1 transfer");
+    }
+
+    const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
+    if (receipt && receipt.status === 1) {
       setToken1Transfered(true);
       setStatus(Status["Idle"]);
     }
-    return data;
+    return receipt;
   }
 
   // Mints LP404
   async function mint() {
     setStatus(Status["Minting"]);
     // Mint LP404 from the pair to the user
-    const data = await writeContractAsync({
+    const txHash = await writeContractAsync({
       address: lpnftPairAddress as Address,
       abi: LPNFTPAIR.abi,
       functionName: "mint",
       args: [account.address],
     }).catch((e) => reset());
 
-    if (data) {
+    if (!txHash) {
+      throw new Error("Transaction failed for minting");
+    }
+
+    const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
+    if (receipt && receipt.status === 1) {
       setToken0Transfered(false);
       setToken1Transfered(false);
       setStatus(Status["Idle"]);
-      setCompletedHash(data);
+      setCompletedHash(txHash);
       setCompleted(true);
     }
   }

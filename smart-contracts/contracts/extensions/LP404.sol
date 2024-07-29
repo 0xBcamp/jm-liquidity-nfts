@@ -28,9 +28,9 @@ contract LP404 is Ownable, ERC404 {
     bool internal initialized = false;
 
     string public traitCID;
-    string public description = "I am a description";
+    string public description;
 
-    string internal uri = "nft-viewer.com/";
+    string internal uri = "lp-nft.xyz/nft-viewer/";
 
     constructor(
         string memory _name,

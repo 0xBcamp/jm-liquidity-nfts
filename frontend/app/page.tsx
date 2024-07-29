@@ -6,6 +6,7 @@ import TokenBalancesCard from "./_components/TokenBalancesCard";
 import React, { useState } from "react";
 import WithdrawFromPairCard from "./_components/WithdrawFromPairCard";
 import DepositToPairCard from "./_components/DepositToPairCard";
+import NFTViewerCard from "./_components/NFTViewerCard";
 import { abi as lpnftPairABI } from "@/contracts/KimLPNFTPair.json";
 import { abi as lp404ABI } from "@/contracts/LP404.json";
 import { getTokenA, getTokenB, getPairAddress } from "@/lib/serverFunctions";
@@ -84,6 +85,7 @@ export default function () {
                     setTraitCID={setTraitCID}
                     setDescription={setDescription}
                     setDecimals={setDecimals}
+                    setLp404Address={setLp404Address}
                   />
                 </div>
                 <div className="col-span-1">
@@ -91,6 +93,7 @@ export default function () {
                     token0={token0 || null}
                     token1={token1 || null}
                     pair={lpnftPairAddress || null}
+                    lp404={lp404Address || null}
                   />
                 </div>
                 <div className="col-span-3 grid grid-cols-2 gap-4">
@@ -104,6 +107,9 @@ export default function () {
                   <div className="col-span-1">
                     <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
+                </div>
+                <div className="col-span-3">
+                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
                 </div>
               </section>
             </main>

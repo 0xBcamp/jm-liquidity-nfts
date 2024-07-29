@@ -41,6 +41,7 @@ export default function FetchPairCard({
   setTraitCID,
   setDescription,
   setDecimals,
+  setLp404Address,
 }: {
   setPair: Function;
   setToken0: Function;
@@ -50,6 +51,7 @@ export default function FetchPairCard({
   setTraitCID: Function;
   setDescription: Function;
   setDecimals: Function;
+  setLp404Address: Function;
 }) {
   // ~~~~~~~~~~~~~~~~~~~~ Setup The Form ~~~~~~~~~~~~~~~~~~~~
   // Form validation schema
@@ -127,6 +129,7 @@ export default function FetchPairCard({
         setPair(pairAddress);
         setToken1(formValues.tokenB as Address);
         setToken0(formValues.tokenA as Address);
+        setLp404Address(lp404Address);
 
         form.setValue('name', name);
         form.setValue('symbol', symbol);
@@ -135,6 +138,7 @@ export default function FetchPairCard({
         form.setValue('decimals', Number(decimals));
 
         console.log("Fetched pair address:", pairAddress);
+        console.log("LP404 address:", lp404Address);
         console.log("Token A:", formValues.tokenA);
         console.log("Token B:", formValues.tokenB);
       } else {

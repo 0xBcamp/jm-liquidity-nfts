@@ -3,7 +3,7 @@ import processEvent from './eventHandler.mjs';
 import { factoryContract } from './config.mjs';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Listen for events
 factoryContract.on('NeedsMetadata', async (tokenId, owner, contractAddress, ) => {
