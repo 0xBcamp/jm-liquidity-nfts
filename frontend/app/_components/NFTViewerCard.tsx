@@ -57,7 +57,10 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
       const response = await fetch(tokenUri);
       const metadata = await response.json();
       setMetadata(metadata);
-      setImageUri(metadata.image);
+      const imageUrl = `http://${metadata.image}?t=${new Date().getTime()}`;
+      setImageUri(imageUrl); // Add a timestamp to bypass cache
+      console.log(`Fetched metadata: ${JSON.stringify(metadata)}`);
+      console.log(`Image URL: ${imageUrl}`);
     }
   };
 
@@ -109,14 +112,25 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
           </form>
         </Form>
         {metadata && (
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4">
             <div>
+              <h3 className="text-lg font-bold">{metadata.name}</h3>
+              {imageUri ? (
+                <iframe
+                  src={imageUri}
+                  title="NFT Image"
+                  className="w-full h-96"
+                  style={{ border: "none" }}
+                  onLoad={() => console.log("Iframe loaded successfully")}
+                  onError={(e) => console.error("Iframe failed to load", e)}
+                />
+              ) : (
+                <p>Loading image...</p>
+              )}
+            </div>
+            <div className="mt-4">
               <h3 className="text-lg font-bold">Metadata</h3>
               <pre>{JSON.stringify(metadata, null, 2)}</pre>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold">Image</h3>
-              {imageUri ? <img src={imageUri} alt="NFT" className="w-full" /> : <p>No image available</p>}
             </div>
           </div>
         )}
