@@ -138,7 +138,11 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
           className="w-full mt-2"
           disabled={isPending || !address || !token0 || !token1 || !pair}
         >
-          {isPending ? "Refreshing..." : "Refresh Balances"}
+          {!address
+            ? "Connect wallet to Access"
+            : isPending
+              ? "Refreshing..."
+              : "Refresh Balances"}
         </Button>
       </CardContent>
     </Card>

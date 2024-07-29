@@ -78,9 +78,6 @@ export default function () {
             </header>
             <main className="w-full flex flex-col justify-center items-center">
               <section className="max-w-screen-xl grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="col-span-full">
-                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
-                </div>
                 <div className="col-span-1 grid gap-4 justify-center">
                   <Tabs defaultValue="create" className="max-w-fit">
                     <TabsList>
@@ -134,6 +131,9 @@ export default function () {
                   <div className="col-span-1">
                     <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
+                </div>
+                <div className="col-span-full">
+                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
                 </div>
               </section>
             </main>
