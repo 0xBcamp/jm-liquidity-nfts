@@ -20,6 +20,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { BaseError } from "viem";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -35,11 +37,20 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [lp404Address, setLp404Address] = useState<string | null>(null);
   const client = useClient();
+  // Check if the client is connected
+  if (!client) {
+    throw new Error("No connected client");
+  }
+  const url = client.chain.rpcUrls.default.http[0];
+  const provider = new ethers.JsonRpcProvider(url);
 
   const fetchLp404Address = async () => {
     if (pairAddress) {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const pairContract = new ethers.Contract(pairAddress, LPNFTPAIR.abi, provider);
+      const pairContract = new ethers.Contract(
+        pairAddress,
+        LPNFTPAIR.abi,
+        provider,
+      );
       const lp404Addr = await pairContract.lp404();
       setLp404Address(lp404Addr);
     }
@@ -51,15 +62,29 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
 
   const fetchMetadata = async (tokenId: string) => {
     if (lp404Address && tokenId) {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const lp404Contract = new ethers.Contract(lp404Address, ERC404.abi, provider);
+      const lp404Contract = new ethers.Contract(
+        lp404Address,
+        ERC404.abi,
+        provider,
+      );
       const tokenUri = await lp404Contract.tokenURI(tokenId);
       const response = await fetch(tokenUri);
       const metadata = await response.json();
       setMetadata(metadata);
       setImageUri(metadata.image);
+    } else {
+      throw new BaseError("Invalid Contract Address or TokenID");
     }
   };
+
+  // Helper Functions
+  function toastError(error: any) {
+    toast(`Failed to Find NFT`, {
+      style: { color: "red" },
+      action: "Close",
+      description: (error as BaseError).shortMessage || error.message,
+    });
+  }
 
   // Form validation schema
   const NFTViewerSchema = z.object({
@@ -73,8 +98,12 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
     resolver: zodResolver(NFTViewerSchema),
   });
 
-  const onSubmit = (data: NFTViewerValues) => {
-    fetchMetadata(data.tokenId);
+  const onSubmit = async (data: NFTViewerValues) => {
+    try {
+      await fetchMetadata(data.tokenId);
+    } catch (error) {
+      toastError(error);
+    }
   };
 
   return (
@@ -116,7 +145,11 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
             </div>
             <div>
               <h3 className="text-lg font-bold">Image</h3>
-              {imageUri ? <img src={imageUri} alt="NFT" className="w-full" /> : <p>No image available</p>}
+              {imageUri ? (
+                <img src={imageUri} alt="NFT" className="w-full" />
+              ) : (
+                <p>No image available</p>
+              )}
             </div>
           </div>
         )}
