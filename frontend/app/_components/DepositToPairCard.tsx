@@ -92,14 +92,14 @@ export default function DepositToPairCard({
     setStatus(Status["Idle"]);
   }
   function toastError(error: any) {
-    toast(`Error during deposit`, {
+    toast(`Failed to Deposit Tokens`, {
       style: { color: "red" },
       action: "Close",
       description: (error as BaseError).shortMessage || error.message,
     });
   }
   function toastSuccess() {
-    toast(`Successfully deposited tokens`, {
+    toast(`Successfully Deposited Tokens`, {
       style: { color: "green" },
       action: "Close",
     });

@@ -70,7 +70,7 @@ export default function CreatePairCard({
 
   // Helper functions
   function toastError(error: any) {
-    toast(`Error during deposit`, {
+    toast(`Failed to Create Pair`, {
       style: { color: "red" },
       action: "Close",
       description: (error as BaseError).shortMessage || error.message,

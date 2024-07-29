@@ -50,14 +50,14 @@ export default function WithdrawFromPairCard({
 
   // Helper functions
   function toastError(error: any) {
-    toast(`Error during deposit`, {
+    toast(`Failed to Withdraw Tokens `, {
       style: { color: "red" },
       action: "Close",
       description: (error as BaseError).shortMessage || error.message,
     });
   }
   function toastSuccess() {
-    toast(`Successfully withdrawn tokens`, {
+    toast(`Successfully Withdrawn Tokens`, {
       style: { color: "green" },
       action: "Close",
     });
@@ -113,7 +113,7 @@ export default function WithdrawFromPairCard({
                   className="w-full bg-red-600"
                   variant={"destructive"}
                 >
-                  {isPending ? "Confirming..." : "Withdraw"}
+                  {isPending ? "Withdrawing..." : "Withdraw"}
                 </Button>
               </div>
               <div className="w-full">

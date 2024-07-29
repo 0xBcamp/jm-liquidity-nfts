@@ -35,9 +35,11 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
     pair: "0",
     pairNFT: "0",
   });
+  const [isPending, setIsPending] = useState(false);
 
   const fetchBalances = useCallback(async () => {
     if (!address || !token0 || !token1 || !pair) return;
+    setIsPending(true);
 
     const provider = new ethers.BrowserProvider(window.ethereum);
     const erc20Contract0 = new ethers.Contract(token0, ERC20, provider);
@@ -63,6 +65,7 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
       pair: ethers.formatUnits(balancePair, decimalsPair),
       pairNFT: pairNFTBalance.toString(),
     });
+    setIsPending(false);
   }, [address, token0, token1, pair]);
 
   useEffect(() => {
@@ -130,8 +133,12 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
         ) : (
           <p>Please create or fetch a pair to view balances.</p>
         )}
-        <Button onClick={fetchBalances} className="w-full mt-2">
-          Refresh Balances
+        <Button
+          onClick={fetchBalances}
+          className="w-full mt-2"
+          disabled={isPending || !address || !token0 || !token1 || !pair}
+        >
+          {isPending ? "Refreshing..." : "Refresh Balances"}
         </Button>
       </CardContent>
     </Card>

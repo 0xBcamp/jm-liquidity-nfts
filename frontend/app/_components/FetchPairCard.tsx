@@ -94,14 +94,14 @@ export default function FetchPairCard({
 
   // Helper functions
   function toastError(error: any) {
-    toast(`Something went wrong`, {
+    toast(`Failed to Fetch Pair`, {
       style: { color: "red" },
       action: "Close",
       description: (error as BaseError).shortMessage || error.message,
     });
   }
   function toastSuccess() {
-    toast(`Successfully Created Pair`, {
+    toast(`Successfully Fetched Pair`, {
       style: { color: "green" },
       action: "Close",
     });
