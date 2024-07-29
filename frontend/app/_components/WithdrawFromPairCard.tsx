@@ -80,7 +80,7 @@ export default function WithdrawFromPairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Withdraw from LPNFT Pair</CardTitle>
         <CardDescription>

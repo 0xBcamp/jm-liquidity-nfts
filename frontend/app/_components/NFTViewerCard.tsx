@@ -19,6 +19,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { BaseError } from "viem";
@@ -138,20 +139,35 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
           </form>
         </Form>
         {metadata && (
-          <div className="mt-4 grid grid-cols-2 gap-4">
-            <div>
-              <h3 className="text-lg font-bold">Metadata</h3>
-              <pre>{JSON.stringify(metadata, null, 2)}</pre>
-            </div>
-            <div>
-              <h3 className="text-lg font-bold">Image</h3>
-              {imageUri ? (
-                <img src={imageUri} alt="NFT" className="w-full" />
-              ) : (
-                <p>No image available</p>
-              )}
-            </div>
-          </div>
+          <>
+            <Tabs defaultValue="image" className="mt-4 max-w-sm lg:max-w-lg">
+              <TabsList>
+                <TabsTrigger value="image">Image</TabsTrigger>
+                <TabsTrigger value="metadata">Metadata</TabsTrigger>
+              </TabsList>
+              <TabsContent value="image">
+                <div>
+                  {imageUri ? (
+                    <img
+                      width={500}
+                      height={500}
+                      src={"http://" + imageUri}
+                      alt="NFT"
+                    />
+                  ) : (
+                    <p>No image available</p>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="metadata">
+                <div>
+                  <pre className="w-full overflow-scroll">
+                    {JSON.stringify(metadata, null, 2)}
+                  </pre>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </>
         )}
       </CardContent>
     </Card>

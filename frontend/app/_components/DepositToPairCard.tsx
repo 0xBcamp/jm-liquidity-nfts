@@ -201,7 +201,7 @@ export default function DepositToPairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Deposit to LPNFT Pair</CardTitle>
         <CardDescription>

@@ -73,7 +73,7 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
   }, [fetchBalances, token0, token1, pair]);
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Token Balances</CardTitle>
         <CardDescription>Connected Wallet Balances</CardDescription>

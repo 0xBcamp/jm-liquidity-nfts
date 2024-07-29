@@ -78,8 +78,8 @@ export default function () {
             </header>
             <main className="w-full flex flex-col justify-center items-center">
               <section className="max-w-screen-xl grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="col-span-1 grid gap-4 justify-center">
-                  <Tabs defaultValue="create" className="max-w-fit">
+                <div className="col-span-1 grid gap-8 justify-center w-full">
+                  <Tabs defaultValue="create" className="w-full">
                     <TabsList>
                       <TabsTrigger value="create">Create Pair</TabsTrigger>
                       <TabsTrigger value="fetch">Fetch Pair</TabsTrigger>
@@ -112,7 +112,7 @@ export default function () {
                     </TabsContent>
                   </Tabs>
                 </div>
-                <div className="col-span-1 grid gap-4 justify-center">
+                <div className="col-span-1 grid gap-4 justify-center w-full">
                   <div className="col-span-1">
                     <TokenBalancesCard
                       token0={token0 || undefined}

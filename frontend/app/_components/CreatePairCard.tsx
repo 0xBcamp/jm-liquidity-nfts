@@ -160,7 +160,7 @@ export default function CreatePairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm lg:max-w-lg">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Create New LP_NFT Pair</CardTitle>
         <CardDescription>

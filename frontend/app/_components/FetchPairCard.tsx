@@ -196,7 +196,7 @@ export default function FetchPairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm lg:max-w-lg">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Fetch Existing LP_NFT Pair</CardTitle>
         <CardDescription>
