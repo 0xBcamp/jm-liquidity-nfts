@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 // Form Validation Imports
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -67,6 +68,21 @@ export default function CreatePairCard({
     },
   });
 
+  // Helper functions
+  function toastError(error: any) {
+    toast(`Error during deposit`, {
+      style: { color: "red" },
+      action: "Close",
+      description: (error as BaseError).shortMessage || error.message,
+    });
+  }
+  function toastSuccess() {
+    toast(`Successfully Created Pair`, {
+      style: { color: "green" },
+      action: "Close",
+    });
+  }
+
   // ~~~~~~~~~~~~~~~~~~~~ Setup Interactions ~~~~~~~~~~~~~~~~~~~~
   const {
     data: hash,
@@ -78,59 +94,69 @@ export default function CreatePairCard({
 
   // Creates a Pair
   async function createPair(formValues: CreatePairValues) {
-    // Get the factory address
-    const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
-    // Check if the factory address is set
-    if (!LPNFT_FACTORY_ADDRESS) {
-      throw new Error("LPNFT_FACTORY_ADDRESS not set");
+    try {
+      // Get the factory address
+      const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
+      // Check if the factory address is set
+      if (!LPNFT_FACTORY_ADDRESS) {
+        throw new Error("LPNFT_FACTORY_ADDRESS not set");
+      }
+      // Create the pair
+      const pairInfo = await writeContractAsync({
+        address: LPNFT_FACTORY_ADDRESS,
+        abi: LPNFTFACTORY.abi,
+        functionName: "createPair",
+        args: [
+          formValues.tokenA as Address,
+          formValues.tokenB as Address,
+          formValues.name,
+          formValues.symbol,
+          formValues.traitCID,
+          formValues.description,
+          BigInt(formValues.decimals),
+        ],
+      });
+      // Set the pair address and token addresses
+      setPair(
+        await getPair(
+          formValues.tokenA as Address,
+          formValues.tokenB as Address,
+        ),
+      );
+      setToken1(formValues.tokenB as Address);
+      setToken0(formValues.tokenA as Address);
+      toastSuccess();
+    } catch (error) {
+      toastError(error);
     }
-    // Create the pair
-    const pairInfo = await writeContractAsync({
-      address: LPNFT_FACTORY_ADDRESS,
-      abi: LPNFTFACTORY.abi,
-      functionName: "createPair",
-      args: [
-        formValues.tokenA as Address,
-        formValues.tokenB as Address,
-        formValues.name,
-        formValues.symbol,
-        formValues.traitCID,
-        formValues.description,
-        BigInt(formValues.decimals),
-      ],
-    }).catch((e: Error) => {
-      console.log((e as BaseError).shortMessage || e.message);
-    });
-    // Set the pair address and token addresses
-    setPair(
-      await getPair(formValues.tokenA as Address, formValues.tokenB as Address),
-    );
-    setToken1(formValues.tokenB as Address);
-    setToken0(formValues.tokenA as Address);
   }
 
   // Gets a pair address
   async function getPair(tokenA: Address, tokenB: Address) {
-    // Get the factory address
-    const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
-    // Check if the factory address is set
-    if (!LPNFT_FACTORY_ADDRESS) {
-      throw new Error("LPNFT_FACTORY_ADDRESS not set");
+    try {
+      // Get the factory address
+      const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
+      // Check if the factory address is set
+      if (!LPNFT_FACTORY_ADDRESS) {
+        throw new Error("LPNFT_FACTORY_ADDRESS not set");
+      }
+      // Check if the client is connected
+      if (!client) {
+        throw new Error("No connected client");
+      }
+      // Get the RPC URL
+      const url = client.chain.rpcUrls.default.http[0];
+      const provider = new ethers.JsonRpcProvider(url);
+      const factoryContract = new ethers.Contract(
+        LPNFT_FACTORY_ADDRESS,
+        LPNFTFACTORY.abi,
+        provider,
+      );
+      const pairAddress = await factoryContract.getPair(tokenA, tokenB);
+      return pairAddress ? (pairAddress as Address) : undefined;
+    } catch (error) {
+      toastError(error);
     }
-    // Check if the client is connected
-    if (!client) {
-      throw new Error("No connected client");
-    }
-    // Get the RPC URL
-    const url = client.chain.rpcUrls.default.http[0];
-    const provider = new ethers.JsonRpcProvider(url);
-    const factoryContract = new ethers.Contract(
-      LPNFT_FACTORY_ADDRESS,
-      LPNFTFACTORY.abi,
-      provider,
-    );
-    const pairAddress = await factoryContract.getPair(tokenA, tokenB);
-    return pairAddress ? (pairAddress as Address) : undefined;
   }
 
   return (
@@ -153,7 +179,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Token A</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter ERC20"/>
+                        <Input {...field} placeholder="Enter ERC20" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -167,7 +193,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Token B</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter ERC20"/>
+                        <Input {...field} placeholder="Enter ERC20" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,7 +208,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter Name"/>
+                        <Input {...field} placeholder="Enter Name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,7 +222,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Symbol</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter Symbol"/>
+                        <Input {...field} placeholder="Enter Symbol" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -212,7 +238,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Trait CID</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="Enter trait CID"/>
+                        <Input {...field} placeholder="Enter trait CID" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -253,11 +279,6 @@ export default function CreatePairCard({
                 {isPending ? "Confirming..." : "Create Pair"}
               </Button>
               {hash && <div>Transaction Hash: {hash}</div>}
-              {error && (
-                <div>
-                  Error: {(error as BaseError).shortMessage || error.message}
-                </div>
-              )}
             </div>
           </form>
         </Form>
@@ -265,4 +286,3 @@ export default function CreatePairCard({
     </Card>
   );
 }
-

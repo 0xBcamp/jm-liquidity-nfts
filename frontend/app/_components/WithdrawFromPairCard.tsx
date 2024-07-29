@@ -8,26 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Form } from "@/components/ui/form";
 
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import ERC20 from "@/contracts/ERC20.json";
 import { Address } from "viem";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 
 import { useWriteContract, useAccount, type BaseError } from "wagmi";
+import { toast } from "sonner";
 
 const WithdrawFromPairSchema = z.object({
   amount: z.number(),
@@ -56,17 +48,35 @@ export default function WithdrawFromPairCard({
   } = useWriteContract();
   const account = useAccount();
 
-  async function withdrawFormOnSubmit(values: WithdrawFromPairValues) {
-    console.log("Burning LP404...");
-    console.log("lpnftPairAddress: ", lpnftPairAddress);
-    // Burn LP404 and return tokens to user
-    const data = await writeContractAsync({
-      address: lpnftPairAddress as Address,
-      abi: LPNFTPAIR.abi,
-      functionName: "burn",
-      args: [account.address],
+  // Helper functions
+  function toastError(error: any) {
+    toast(`Error during deposit`, {
+      style: { color: "red" },
+      action: "Close",
+      description: (error as BaseError).shortMessage || error.message,
     });
-    console.log("Done Withdrawing!");
+  }
+  function toastSuccess() {
+    toast(`Successfully withdrawn tokens`, {
+      style: { color: "green" },
+      action: "Close",
+    });
+  }
+
+  async function withdrawFormOnSubmit(values: WithdrawFromPairValues) {
+    try {
+      // Burn LP404 and return tokens to user
+      const txhash = await writeContractAsync({
+        address: lpnftPairAddress as Address,
+        abi: LPNFTPAIR.abi,
+        functionName: "burn",
+        args: [account.address],
+      });
+
+      toastSuccess();
+    } catch (error) {
+      toastError(error);
+    }
   }
 
   return (
@@ -115,11 +125,6 @@ export default function WithdrawFromPairCard({
                   >
                     Transaction Hash: {hash.substring(0, 10) + "..."}
                   </Link>
-                )}
-                {error && (
-                  <div>
-                    Error: {(error as BaseError).shortMessage || error.message}
-                  </div>
                 )}
               </div>
             </div>

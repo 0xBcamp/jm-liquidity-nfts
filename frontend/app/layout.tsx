@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "LP NFT",
-  description: "Interact with LP NFT contracts to create liquidity pairs, deposit/withdraw LP tokens, and view NFTs.",
+  description:
+    "Interact with LP NFT contracts to create liquidity pairs, deposit/withdraw LP tokens, and view NFTs.",
 };
 
 export default function RootLayout({
@@ -17,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className + "h-screen"}>{children}</body>
+      <Toaster />
     </html>
   );
 }

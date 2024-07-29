@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { ethers } from "ethers";
 import { useAccount } from "wagmi";
 import {
@@ -76,34 +77,55 @@ const TokenBalancesCard: React.FC<TokenBalancesCardProps> = ({
       </CardHeader>
       <CardContent>
         {token0 && token1 && pair && lp404 ? (
-          <div>
-            <div className="flex gap-3 items-center ">
+          <div className="w-full">
+            <div className="gap-3 items-center">
               <h3 className="text-md font-semibold tracking-tight">
                 Token 0 Balance:
               </h3>
               <p className="text-lg tracking-widest">{balances.token0}</p>
             </div>
-            <div className="flex gap-3 items-center ">
+            <div className="gap-3 items-center">
               <h3 className="text-md font-semibold tracking-tight">
                 Token 1 Balance:
               </h3>
               <p className="text-lg tracking-widest">{balances.token0}</p>
             </div>
-            <div className="flex gap-3 items-center ">
+            <div className="gap-3 items-center">
               <h3 className="text-md font-semibold tracking-tight">
                 Pair Token Balance:
               </h3>
               <p className="text-lg tracking-widest">{balances.pair}</p>
             </div>
-            <div className="flex gap-3 items-center ">
+            <div className="gap-3 items-center">
               <h3 className="text-md font-semibold tracking-tight">
                 Pair NFT Balance:
               </h3>
               <p className="text-lg tracking-widest">{balances.pairNFT}</p>
             </div>
-
-            <p>Pair Contract Address: {pair}</p>
-            <p>LP404 Contract Address: {lp404}</p>
+            <div className="gap-3 items-center">
+              <h3 className="text-md font-semibold tracking-tight">
+                Pair Contract Address:
+              </h3>
+              <Link
+                href={`https://sepolia.explorer.mode.network/address/${lp404}`}
+                className="text-blue-500 hover:underline"
+                target="blank"
+              >
+                {pair.substring(0, 15) + "..."}
+              </Link>
+            </div>
+            <div className="gap-3 items-center ">
+              <h3 className="text-md font-semibold tracking-tight">
+                LP404 Contract Address:
+              </h3>
+              <Link
+                href={`https://sepolia.explorer.mode.network/address/${lp404}`}
+                className="text-blue-500 hover:underline"
+                target="blank"
+              >
+                {lp404.substring(0, 15) + "..."}
+              </Link>
+            </div>
           </div>
         ) : (
           <p>Please create or fetch a pair to view balances.</p>

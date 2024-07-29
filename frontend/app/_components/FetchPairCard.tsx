@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 // Form Validation Imports
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,6 +30,7 @@ import { PairDetails } from "@/app/page";
 import { ethers } from "ethers";
 import { useClient } from "wagmi";
 import { Address } from "viem";
+import { BaseError } from "viem";
 import LPNFTFACTORY from "@/contracts/KimLPNFTFactory.json";
 import LPNFTPAIR from "@/contracts/KimLPNFTPair.json";
 import LP404 from "@/contracts/LP404.json";
@@ -90,28 +92,46 @@ export default function FetchPairCard({
   const [foundPair, setFoundPair] = useState(pairDetails && true);
   const [isPending, setIsPending] = useState(false);
 
+  // Helper functions
+  function toastError(error: any) {
+    toast(`Something went wrong`, {
+      style: { color: "red" },
+      action: "Close",
+      description: (error as BaseError).shortMessage || error.message,
+    });
+  }
+  function toastSuccess() {
+    toast(`Successfully Created Pair`, {
+      style: { color: "green" },
+      action: "Close",
+    });
+  }
   // Gets a pair address
   async function getPair(tokenA: Address, tokenB: Address) {
-    // Get the factory address
-    const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
-    // Check if the factory address is set
-    if (!LPNFT_FACTORY_ADDRESS) {
-      throw new Error("LPNFT_FACTORY_ADDRESS not set");
+    try {
+      // Get the factory address
+      const LPNFT_FACTORY_ADDRESS = (await getFactoryAddress()) as Address;
+      // Check if the factory address is set
+      if (!LPNFT_FACTORY_ADDRESS) {
+        throw new Error("LPNFT_FACTORY_ADDRESS not set");
+      }
+      // Check if the client is connected
+      if (!client) {
+        throw new Error("No connected client");
+      }
+      // Get the RPC URL
+      const url = client.chain.rpcUrls.default.http[0];
+      const provider = new ethers.JsonRpcProvider(url);
+      const factoryContract = new ethers.Contract(
+        LPNFT_FACTORY_ADDRESS,
+        LPNFTFACTORY.abi,
+        provider,
+      );
+      const pairAddress = await factoryContract.getPair(tokenA, tokenB);
+      return pairAddress ? (pairAddress as Address) : undefined;
+    } catch (error) {
+      toastError(error);
     }
-    // Check if the client is connected
-    if (!client) {
-      throw new Error("No connected client");
-    }
-    // Get the RPC URL
-    const url = client.chain.rpcUrls.default.http[0];
-    const provider = new ethers.JsonRpcProvider(url);
-    const factoryContract = new ethers.Contract(
-      LPNFT_FACTORY_ADDRESS,
-      LPNFTFACTORY.abi,
-      provider,
-    );
-    const pairAddress = await factoryContract.getPair(tokenA, tokenB);
-    return pairAddress ? (pairAddress as Address) : undefined;
   }
 
   // Fetch pair details and populate the form
@@ -168,6 +188,7 @@ export default function FetchPairCard({
         console.error("Pair not found");
       }
     } catch (error) {
+      toastError(error);
       console.error("Error fetching pair:", error);
     } finally {
       setIsPending(false);

@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 // Form Imports
 import { useForm } from "react-hook-form";
@@ -39,6 +40,7 @@ enum Status {
   "Minting",
   "Transferring Token0",
   "Transferring Token1",
+  "Confirming Transaction",
 }
 
 export default function DepositToPairCard({
@@ -89,6 +91,19 @@ export default function DepositToPairCard({
   function reset() {
     setStatus(Status["Idle"]);
   }
+  function toastError(error: any) {
+    toast(`Error during deposit`, {
+      style: { color: "red" },
+      action: "Close",
+      description: (error as BaseError).shortMessage || error.message,
+    });
+  }
+  function toastSuccess() {
+    toast(`Successfully deposited tokens`, {
+      style: { color: "green" },
+      action: "Close",
+    });
+  }
 
   // Transfer token0 and token1 to the pair
   async function transferToken0(amount: number) {
@@ -106,11 +121,12 @@ export default function DepositToPairCard({
       throw new Error("Transaction failed for token0 transfer");
     }
 
+    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
       setToken0Transfered(true);
-      setStatus(Status["Idle"]);
     }
+    setStatus(Status["Idle"]);
     return receipt;
   }
 
@@ -129,11 +145,12 @@ export default function DepositToPairCard({
       throw new Error("Transaction failed for token1 transfer");
     }
 
+    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
       setToken1Transfered(true);
-      setStatus(Status["Idle"]);
     }
+    setStatus(Status["Idle"]);
     return receipt;
   }
 
@@ -146,12 +163,13 @@ export default function DepositToPairCard({
       abi: LPNFTPAIR.abi,
       functionName: "mint",
       args: [account.address],
-    }).catch((e) => reset());
+    });
 
     if (!txHash) {
       throw new Error("Transaction failed for minting");
     }
 
+    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
       setToken0Transfered(false);
@@ -164,11 +182,6 @@ export default function DepositToPairCard({
 
   // Deposits liquidity to the pair
   async function depositLiquidity(data: DepositToPairValues) {
-    // setCompleted(false);
-    // setToken0Transfered(false);
-    // setToken1Transfered(false);
-    // setStatus(Status["Idle"]);
-
     if (data.amount != 0) {
       try {
         if (!token0Transfered) {
@@ -178,7 +191,9 @@ export default function DepositToPairCard({
           await transferToken1(data.amount);
         }
         await mint();
-      } catch (error) {
+        toastSuccess();
+      } catch (e: any) {
+        toastError(e);
         console.error("Error during deposit:", error);
         reset();
       }
@@ -212,15 +227,17 @@ export default function DepositToPairCard({
               />
               <div className="w-full flex items-center justify-between gap-6">
                 <Button
-                  disabled={isPending}
+                  disabled={
+                    isPending || status === Status["Confirming Transaction"]
+                  }
                   type="submit"
                   className="w-full bg-green-600"
                 >
                   {(status === Status["Transferring Token0"] &&
-                    "Transferring Token0...") ||
+                    "Depositing Token0...") ||
                     (status === Status["Transferring Token1"] &&
-                      "Transferring Token1...") ||
-                    (status === Status["Minting"] && "Minting...") ||
+                      "Depositing Token1...") ||
+                    (status === Status["Minting"] && "Minting LP Token...") ||
                     (status === Status["Idle"] && "Deposit") ||
                     "Deposit"}
                 </Button>
@@ -234,11 +251,6 @@ export default function DepositToPairCard({
                   >
                     Transaction Hash: {completedHash.substring(0, 10) + "..."}
                   </Link>
-                )}
-                {error && (
-                  <div>
-                    Error: {(error as BaseError).shortMessage || error.message}
-                  </div>
                 )}
               </div>
             </div>

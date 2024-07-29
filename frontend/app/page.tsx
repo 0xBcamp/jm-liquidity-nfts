@@ -6,11 +6,8 @@ import TokenBalancesCard from "./_components/TokenBalancesCard";
 import React, { useState } from "react";
 import WithdrawFromPairCard from "./_components/WithdrawFromPairCard";
 import DepositToPairCard from "./_components/DepositToPairCard";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NFTViewerCard from "./_components/NFTViewerCard";
-import { abi as lpnftPairABI } from "@/contracts/KimLPNFTPair.json";
-import { abi as lp404ABI } from "@/contracts/LP404.json";
-import { getTokenA, getTokenB, getPairAddress } from "@/lib/serverFunctions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -43,6 +40,9 @@ export default function () {
   const [lpnftPairAddress, setLpnftPairAddress] = useState<Address | undefined>(
     undefined,
   );
+  const [lp404Address, setLp404Address] = useState<Address | undefined>(
+    undefined,
+  );
   const [token0, setToken0] = useState<Address | undefined>(undefined);
   const [token1, setToken1] = useState<Address | undefined>(undefined);
   const [pairDetails, setPairDetails] = useState<PairDetails | undefined>(
@@ -65,9 +65,6 @@ export default function () {
   function _setToken1(value: Address | undefined) {
     setToken1(value);
   }
-  function _setPairDetails(value: PairDetails | undefined) {
-    setPairDetails(value);
-  }
 
   return (
     <WagmiProvider config={config}>
@@ -81,6 +78,9 @@ export default function () {
             </header>
             <main className="w-full flex flex-col justify-center items-center">
               <section className="max-w-screen-xl grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="col-span-full">
+                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
+                </div>
                 <div className="col-span-1 grid gap-4 justify-center">
                   <Tabs defaultValue="create" className="max-w-fit">
                     <TabsList>
@@ -99,7 +99,7 @@ export default function () {
                     <TabsContent value="fetch">
                       <div className="">
                         <FetchPairCard
-                          setPair={_setLpnftPairAddress}
+                          setPairAddress={_setLpnftPairAddress}
                           setToken1={_setToken1}
                           setToken0={_setToken0}
                           setName={setName}
@@ -108,6 +108,8 @@ export default function () {
                           setDescription={setDescription}
                           setDecimals={setDecimals}
                           setLp404Address={setLp404Address}
+                          pairDetails={pairDetails}
+                          setPairDetails={setPairDetails}
                         />
                       </div>
                     </TabsContent>
@@ -116,10 +118,10 @@ export default function () {
                 <div className="col-span-1 grid gap-4 justify-center">
                   <div className="col-span-1">
                     <TokenBalancesCard
-                      token0={token0 || null}
-                      token1={token1 || null}
-                      pair={lpnftPairAddress || null}
-                      lp404={lp404Address || null}
+                      token0={token0 || undefined}
+                      token1={token1 || undefined}
+                      pair={lpnftPairAddress || undefined}
+                      lp404={lp404Address || undefined}
                     />
                   </div>
                   <div className="col-span-1">
@@ -132,9 +134,6 @@ export default function () {
                   <div className="col-span-1">
                     <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
-                </div>
-                <div className="col-span-3">
-                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
                 </div>
               </section>
             </main>
