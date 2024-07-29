@@ -57,12 +57,12 @@ export default function CreatePairCard({
   const form = useForm<z.infer<typeof CreatePairSchema>>({
     resolver: zodResolver(CreatePairSchema),
     defaultValues: {
-      tokenA: "0x5Ce0d5186575FaeEBe56F9Db7c3559Ff05A90191",
-      tokenB: "0x804fAeEC0ce2712c4C954a8C4d7b6fd21B7C749F",
-      name: "Test",
-      symbol: "TST",
-      traitCID: "Whatever",
-      description: "This is a cool test",
+      // tokenA: "0x5Ce0d5186575FaeEBe56F9Db7c3559Ff05A90191",
+      // tokenB: "0x804fAeEC0ce2712c4C954a8C4d7b6fd21B7C749F",
+      // name: "Test",
+      // symbol: "TST",
+      // traitCID: "Whatever",
+      // description: "This is a cool test",
       decimals: 18,
     },
   });
@@ -136,9 +136,9 @@ export default function CreatePairCard({
   return (
     <Card className="mx-auto max-w-sm lg:max-w-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Create New LPNFT Pair</CardTitle>
+        <CardTitle className="text-2xl">Create New LP_NFT Pair</CardTitle>
         <CardDescription>
-          Enter your information to create a pair
+          Enter your information to create an LP_NFT pair
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -153,7 +153,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Token A</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -167,7 +167,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Token B</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -182,7 +182,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter Name"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -196,7 +196,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Symbol</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter Symbol"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -212,7 +212,7 @@ export default function CreatePairCard({
                     <FormItem>
                       <FormLabel>Trait CID</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter trait CID"/>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

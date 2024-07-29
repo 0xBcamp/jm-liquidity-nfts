@@ -7,6 +7,10 @@ import React, { useState } from "react";
 import WithdrawFromPairCard from "./_components/WithdrawFromPairCard";
 import DepositToPairCard from "./_components/DepositToPairCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import NFTViewerCard from "./_components/NFTViewerCard";
+import { abi as lpnftPairABI } from "@/contracts/KimLPNFTPair.json";
+import { abi as lp404ABI } from "@/contracts/LP404.json";
+import { getTokenA, getTokenB, getPairAddress } from "@/lib/serverFunctions";
 
 import "@rainbow-me/rainbowkit/styles.css";
 import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -44,6 +48,13 @@ export default function () {
   const [pairDetails, setPairDetails] = useState<PairDetails | undefined>(
     undefined,
   );
+
+  // Add the missing state variables
+  const [name, setName] = useState<string | undefined>(undefined);
+  const [symbol, setSymbol] = useState<string | undefined>(undefined);
+  const [traitCID, setTraitCID] = useState<string | undefined>(undefined);
+  const [description, setDescription] = useState<string | undefined>(undefined);
+  const [decimals, setDecimals] = useState<number | undefined>(undefined);
 
   function _setLpnftPairAddress(value: Address | undefined) {
     setLpnftPairAddress(value);
@@ -88,11 +99,15 @@ export default function () {
                     <TabsContent value="fetch">
                       <div className="">
                         <FetchPairCard
-                          setPairAddress={_setLpnftPairAddress}
+                          setPair={_setLpnftPairAddress}
                           setToken1={_setToken1}
                           setToken0={_setToken0}
-                          setPairDetails={_setPairDetails}
-                          pairDetails={pairDetails}
+                          setName={setName}
+                          setSymbol={setSymbol}
+                          setTraitCID={setTraitCID}
+                          setDescription={setDescription}
+                          setDecimals={setDecimals}
+                          setLp404Address={setLp404Address}
                         />
                       </div>
                     </TabsContent>
@@ -101,9 +116,10 @@ export default function () {
                 <div className="col-span-1 grid gap-4 justify-center">
                   <div className="col-span-1">
                     <TokenBalancesCard
-                      token0={token0 || ("" as Address)}
-                      token1={token1 || ("" as Address)}
-                      pair={lpnftPairAddress}
+                      token0={token0 || null}
+                      token1={token1 || null}
+                      pair={lpnftPairAddress || null}
+                      lp404={lp404Address || null}
                     />
                   </div>
                   <div className="col-span-1">
@@ -116,6 +132,9 @@ export default function () {
                   <div className="col-span-1">
                     <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
                   </div>
+                </div>
+                <div className="col-span-3">
+                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
                 </div>
               </section>
             </main>

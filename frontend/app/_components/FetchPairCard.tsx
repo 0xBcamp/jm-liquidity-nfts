@@ -40,12 +40,24 @@ export default function FetchPairCard({
   setToken1,
   setPairDetails,
   pairDetails,
+  setName,
+  setSymbol,
+  setTraitCID,
+  setDescription,
+  setDecimals,
+  setLp404Address,
 }: {
   setPairAddress: Function;
   setToken0: Function;
   setToken1: Function;
   setPairDetails: Function;
   pairDetails: PairDetails | undefined;
+  setName: Function;
+  setSymbol: Function;
+  setTraitCID: Function;
+  setDescription: Function;
+  setDecimals: Function;
+  setLp404Address: Function;
 }) {
   // ~~~~~~~~~~~~~~~~~~~~ Setup The Form ~~~~~~~~~~~~~~~~~~~~
   // Form validation schema
@@ -138,6 +150,7 @@ export default function FetchPairCard({
         setPairAddress(pairAddress);
         setToken1(formValues.tokenB as Address);
         setToken0(formValues.tokenA as Address);
+        setLp404Address(lp404Address);
 
         form.setValue("name", name);
         form.setValue("symbol", symbol);
@@ -146,6 +159,7 @@ export default function FetchPairCard({
         form.setValue("decimals", Number(decimals));
 
         console.log("Fetched pair address:", pairAddress);
+        console.log("LP404 address:", lp404Address);
         console.log("Token A:", formValues.tokenA);
         console.log("Token B:", formValues.tokenB);
         setFoundPair(true);
@@ -163,9 +177,9 @@ export default function FetchPairCard({
   return (
     <Card className="mx-auto max-w-sm lg:max-w-lg">
       <CardHeader>
-        <CardTitle className="text-2xl">Fetch Existing LPNFT Pair</CardTitle>
+        <CardTitle className="text-2xl">Fetch Existing LP_NFT Pair</CardTitle>
         <CardDescription>
-          Enter ERC20 token addresses to fetch the LPNFT pair.
+          Enter ERC20 addresses to fetch the LP_NFT pair.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -180,7 +194,7 @@ export default function FetchPairCard({
                     <FormItem>
                       <FormLabel>Token A</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -194,7 +208,7 @@ export default function FetchPairCard({
                     <FormItem>
                       <FormLabel>Token B</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Enter ERC20" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
