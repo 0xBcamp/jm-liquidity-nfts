@@ -77,24 +77,22 @@ export default function () {
               </nav>
             </header>
             <main className="w-full flex flex-col justify-center items-center">
-              <section className="max-w-screen-xl grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="col-span-1 grid gap-4 justify-center">
-                  <Tabs defaultValue="create" className="max-w-fit">
-                    <TabsList>
-                      <TabsTrigger value="create">Create Pair</TabsTrigger>
-                      <TabsTrigger value="fetch">Fetch Pair</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="create">
-                      <div className="">
+              <section className="max-w-screen-xl w-full mb-4">
+                <Tabs defaultValue="create" className="w-full">
+                  <TabsList className="flex justify-center mb-4">
+                    <TabsTrigger value="create">Create Pair</TabsTrigger>
+                    <TabsTrigger value="fetch">Fetch Pair</TabsTrigger>
+                  </TabsList>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <div className="col-span-1">
+                      <TabsContent value="create">
                         <CreatePairCard
                           setPair={_setLpnftPairAddress}
                           setToken1={_setToken1}
                           setToken0={_setToken0}
                         />
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="fetch">
-                      <div className="">
+                      </TabsContent>
+                      <TabsContent value="fetch">
                         <FetchPairCard
                           setPairAddress={_setLpnftPairAddress}
                           setToken1={_setToken1}
@@ -108,33 +106,33 @@ export default function () {
                           pairDetails={pairDetails}
                           setPairDetails={setPairDetails}
                         />
+                      </TabsContent>
+                    </div>
+                    <div className="col-span-1">
+                      <TokenBalancesCard
+                        token0={token0 || undefined}
+                        token1={token1 || undefined}
+                        pair={lpnftPairAddress || undefined}
+                        lp404={lp404Address || undefined}
+                      />
+                    </div>
+                    <div className="col-span-1 grid gap-4">
+                      <div className="w-full">
+                        <DepositToPairCard
+                          token0={token0 || ("" as Address)}
+                          token1={token1 || ("" as Address)}
+                          lpnftPairAddress={lpnftPairAddress}
+                        />
                       </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-                <div className="col-span-1 grid gap-4 justify-center">
-                  <div className="col-span-1">
-                    <TokenBalancesCard
-                      token0={token0 || undefined}
-                      token1={token1 || undefined}
-                      pair={lpnftPairAddress || undefined}
-                      lp404={lp404Address || undefined}
-                    />
+                      <div className="w-full">
+                        <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
+                      </div>
+                    </div>
                   </div>
-                  <div className="col-span-1">
-                    <DepositToPairCard
-                      token0={token0 || ("" as Address)}
-                      token1={token1 || ("" as Address)}
-                      lpnftPairAddress={lpnftPairAddress}
-                    />
+                  <div className="col-span-full mt-4">
+                    <NFTViewerCard pairAddress={lpnftPairAddress || null} />
                   </div>
-                  <div className="col-span-1">
-                    <WithdrawFromPairCard lpnftPairAddress={lpnftPairAddress} />
-                  </div>
-                </div>
-                <div className="col-span-full">
-                  <NFTViewerCard pairAddress={lpnftPairAddress || null} />
-                </div>
+                </Tabs>
               </section>
             </main>
           </>

@@ -22,7 +22,7 @@ import { toast } from "sonner";
 
 // Form Imports
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
@@ -53,11 +53,45 @@ export default function DepositToPairCard({
   lpnftPairAddress: Address | undefined;
 }) {
   // Setup state Variables
-  const [token0Transfered, setToken0Transfered] = useState(false);
-  const [token1Transfered, setToken1Transfered] = useState(false);
+  const [token0Transferred, setToken0Transferred] = useState(false);
+  const [token1Transferred, setToken1Transferred] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [completedHash, setCompletedHash] = useState<string | undefined>();
   const [status, setStatus] = useState<Status>(Status["Idle"]);
+  const [isPending, setIsPending] = useState(false);
+
+  // WebSocket state
+  const [webSocket, setWebSocket] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:3003');
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      setWebSocket(ws);
+    };
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.tokenId) {
+        toast(`NFT Minted with Token ID: ${data.tokenId}`, {
+          style: { color: "green" },
+          position: 'top-center',
+          duration: 10000,
+        });
+      }
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
+      setWebSocket(null);
+    };
+
+    return () => {
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, []);
 
   const client = useClient();
   // Check if the client is connected
@@ -84,24 +118,27 @@ export default function DepositToPairCard({
   type DepositToPairValues = z.infer<typeof DepositToPairSchema>;
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Ethereum Interactions setup ~~~~~~~~~~~~~~~~~~~~~~~~~
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, error } = useWriteContract();
   const account = useAccount();
 
   // Helper functions
   function reset() {
     setStatus(Status["Idle"]);
+    setIsPending(false);
   }
   function toastError(error: any) {
     toast(`Failed to Deposit Tokens`, {
       style: { color: "red" },
       action: "Close",
       description: (error as BaseError).shortMessage || error.message,
+      position: 'top-center',
     });
   }
   function toastSuccess() {
     toast(`Successfully Deposited Tokens`, {
       style: { color: "green" },
       action: "Close",
+      position: 'top-center',
     });
   }
 
@@ -110,6 +147,7 @@ export default function DepositToPairCard({
     console.log("Token0 : ", token0);
     // Transfer token0 amount to the pair
     setStatus(Status["Transferring Token0"]);
+    setIsPending(true);
     const txHash = await writeContractAsync({
       address: token0 as Address,
       abi: ERC20,
@@ -121,12 +159,12 @@ export default function DepositToPairCard({
       throw new Error("Transaction failed for token0 transfer");
     }
 
-    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
-      setToken0Transfered(true);
+      setToken0Transferred(true);
     }
     setStatus(Status["Idle"]);
+    setIsPending(false);
     return receipt;
   }
 
@@ -134,6 +172,7 @@ export default function DepositToPairCard({
     console.log("Token1 : ", token1);
     // Transfer token1 amount to the pair
     setStatus(Status["Transferring Token1"]);
+    setIsPending(true);
     const txHash = await writeContractAsync({
       address: token1 as Address,
       abi: ERC20,
@@ -145,18 +184,19 @@ export default function DepositToPairCard({
       throw new Error("Transaction failed for token1 transfer");
     }
 
-    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
-      setToken1Transfered(true);
+      setToken1Transferred(true);
     }
     setStatus(Status["Idle"]);
+    setIsPending(false);
     return receipt;
   }
 
   // Mints LP404
   async function mint() {
     setStatus(Status["Minting"]);
+    setIsPending(true);
     // Mint LP404 from the pair to the user
     const txHash = await writeContractAsync({
       address: lpnftPairAddress as Address,
@@ -169,25 +209,26 @@ export default function DepositToPairCard({
       throw new Error("Transaction failed for minting");
     }
 
-    setStatus(Status["Confirming Transaction"]);
     const receipt = await provider.waitForTransaction(txHash); // Wait for the transaction to be confirmed
     if (receipt && receipt.status === 1) {
-      setToken0Transfered(false);
-      setToken1Transfered(false);
-      setStatus(Status["Idle"]);
+      setToken0Transferred(false);
+      setToken1Transferred(false);
       setCompletedHash(txHash);
       setCompleted(true);
     }
+    setStatus(Status["Idle"]);
+    setIsPending(false);
+    return receipt;
   }
 
   // Deposits liquidity to the pair
   async function depositLiquidity(data: DepositToPairValues) {
     if (data.amount != 0) {
       try {
-        if (!token0Transfered) {
+        if (!token0Transferred) {
           await transferToken0(data.amount);
         }
-        if (!token1Transfered) {
+        if (!token1Transferred) {
           await transferToken1(data.amount);
         }
         await mint();
@@ -195,6 +236,7 @@ export default function DepositToPairCard({
       } catch (e: any) {
         toastError(e);
         console.error("Error during deposit:", error);
+      } finally {
         reset();
       }
     }
@@ -233,11 +275,9 @@ export default function DepositToPairCard({
                   type="submit"
                   className="w-full bg-green-600"
                 >
-                  {(status === Status["Transferring Token0"] &&
-                    "Depositing Token0...") ||
-                    (status === Status["Transferring Token1"] &&
-                      "Depositing Token1...") ||
-                    (status === Status["Minting"] && "Minting LP Token...") ||
+                  {(status === Status["Transferring Token0"] && "Depositing Token0...") ||
+                    (status === Status["Transferring Token1"] && "Depositing Token1...") ||
+                    (status === Status["Minting"] && "Minting LP Tokens...") ||
                     (status === Status["Idle"] && "Deposit") ||
                     "Deposit"}
                 </Button>

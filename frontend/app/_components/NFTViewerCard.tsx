@@ -156,8 +156,19 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
               )}
             </div>
             <div className="mt-4">
-              <h3 className="text-lg font-bold">Metadata</h3>
-              <pre>{JSON.stringify(metadata, null, 2)}</pre>
+              <div className="mb-4">
+                <h4 className="font-bold text-center">Description</h4>
+                <p className="border p-2 text-center">{metadata.description}</p>
+              </div>
+              <h4 className="font-bold text-center">Attributes</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {metadata.attributes.map((attr: any, index: number) => (
+                  <div key={index} className="border p-2 text-center">
+                    <h5 className="font-bold border-b">{attr.trait_type}</h5>
+                    <p>{attr.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
