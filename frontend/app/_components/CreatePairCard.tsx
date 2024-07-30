@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import Link from "next/link";
 // Form Validation Imports
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -278,7 +279,17 @@ export default function CreatePairCard({
               <Button disabled={isPending} type="submit" className="w-full">
                 {isPending ? "Confirming..." : "Create Pair"}
               </Button>
-              {hash && <div>Transaction Hash: {hash}</div>}
+              <div className="w-full">
+                {hash && (
+                  <Link
+                    href={`https://sepolia.explorer.mode.network/tx/${hash}`}
+                    className="text-blue-500"
+                    target="blank"
+                  >
+                    Transaction Hash: {hash.substring(0, 10) + "..."}
+                  </Link>
+                )}
+              </div>
             </div>
           </form>
         </Form>
