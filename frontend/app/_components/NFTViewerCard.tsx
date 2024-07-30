@@ -72,9 +72,10 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
       const response = await fetch(tokenUri);
       const metadata = await response.json();
       setMetadata(metadata);
-      setImageUri(metadata.image);
-    } else {
-      throw new BaseError("Invalid Contract Address or TokenID");
+      const imageUrl = `http://${metadata.image}?t=${new Date().getTime()}`;
+      setImageUri(imageUrl); // Add a timestamp to bypass cache
+      console.log(`Fetched metadata: ${JSON.stringify(metadata)}`);
+      console.log(`Image URL: ${imageUrl}`);
     }
   };
 
@@ -139,35 +140,38 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
           </form>
         </Form>
         {metadata && (
-          <>
-            <Tabs defaultValue="image" className="mt-4 max-w-sm lg:max-w-lg">
-              <TabsList>
-                <TabsTrigger value="image">Image</TabsTrigger>
-                <TabsTrigger value="metadata">Metadata</TabsTrigger>
-              </TabsList>
-              <TabsContent value="image">
-                <div>
-                  {imageUri ? (
-                    <img
-                      width={500}
-                      height={500}
-                      src={"http://" + imageUri}
-                      alt="NFT"
-                    />
-                  ) : (
-                    <p>No image available</p>
-                  )}
-                </div>
-              </TabsContent>
-              <TabsContent value="metadata">
-                <div>
-                  <pre className="w-full overflow-scroll">
-                    {JSON.stringify(metadata, null, 2)}
-                  </pre>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </>
+          <div className="mt-4">
+            <div>
+              <h3 className="text-lg font-bold">{metadata.name}</h3>
+              {imageUri ? (
+                <iframe
+                  src={imageUri}
+                  title="NFT Image"
+                  className="w-full h-96"
+                  style={{ border: "none" }}
+                  onLoad={() => console.log("Iframe loaded successfully")}
+                  onError={(e) => console.error("Iframe failed to load", e)}
+                />
+              ) : (
+                <p>Loading image...</p>
+              )}
+            </div>
+            <div className="mt-4">
+              <div className="mb-4">
+                <h4 className="font-bold text-center">Description</h4>
+                <p className="border p-2 text-center">{metadata.description}</p>
+              </div>
+              <h4 className="font-bold text-center">Attributes</h4>
+              <div className="grid grid-cols-2 gap-4">
+                {metadata.attributes.map((attr: any, index: number) => (
+                  <div key={index} className="border p-2 text-center">
+                    <h5 className="font-bold border-b">{attr.trait_type}</h5>
+                    <p>{attr.value}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
       </CardContent>
     </Card>
