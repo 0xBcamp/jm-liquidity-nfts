@@ -37,6 +37,7 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
   const [metadata, setMetadata] = useState<any>(null);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [lp404Address, setLp404Address] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
   const client = useClient();
   // Check if the client is connected
   if (!client) {
@@ -102,7 +103,9 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
 
   const onSubmit = async (data: NFTViewerValues) => {
     try {
+      setIsPending(true);
       await fetchMetadata(data.tokenId);
+      setIsPending(false);
     } catch (error) {
       toastError(error);
     }
@@ -134,7 +137,7 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
                 )}
               />
               <Button type="submit" className="w-full bg-green-600">
-                Fetch Metadata
+                {isPending ? "Fetching..." : "Fetch Metadata"}
               </Button>
             </div>
           </form>
