@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import Link from "next/link";
 // Form Validation Imports
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +74,7 @@ export default function CreatePairCard({
     toast(`Failed to Create Pair`, {
       style: { color: "red" },
       action: "Close",
+      position: 'top-center',
       description: (error as BaseError).shortMessage || error.message,
     });
   }
@@ -80,6 +82,7 @@ export default function CreatePairCard({
     toast(`Successfully Created Pair`, {
       style: { color: "green" },
       action: "Close",
+      position: 'top-center',
     });
   }
 
@@ -160,7 +163,7 @@ export default function CreatePairCard({
   }
 
   return (
-    <Card className="mx-auto max-w-sm lg:max-w-lg">
+    <Card className="mx-auto w-full">
       <CardHeader>
         <CardTitle className="text-2xl">Create New LP_NFT Pair</CardTitle>
         <CardDescription>
@@ -278,7 +281,17 @@ export default function CreatePairCard({
               <Button disabled={isPending} type="submit" className="w-full">
                 {isPending ? "Confirming..." : "Create Pair"}
               </Button>
-              {hash && <div>Transaction Hash: {hash}</div>}
+              <div className="w-full">
+                {hash && (
+                  <Link
+                    href={`https://sepolia.explorer.mode.network/tx/${hash}`}
+                    className="text-blue-500"
+                    target="blank"
+                  >
+                    Transaction Hash: {hash.substring(0, 10) + "..."}
+                  </Link>
+                )}
+              </div>
             </div>
           </form>
         </Form>

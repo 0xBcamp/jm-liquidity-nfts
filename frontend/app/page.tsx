@@ -78,6 +78,9 @@ export default function () {
             </header>
             <main className="w-full flex flex-col justify-center items-center">
               <section className="max-w-screen-xl w-full mb-4">
+                <h1 className="font-bold text-6xl mb-4" style={{ color: "#863ee4" }}>
+                  LP NFT
+                </h1>
                 <Tabs defaultValue="create" className="w-full">
                   <TabsList className="flex justify-center mb-4">
                     <TabsTrigger value="create">Create Pair</TabsTrigger>

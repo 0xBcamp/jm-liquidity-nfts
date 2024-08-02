@@ -147,7 +147,7 @@ const NFTViewerCard: React.FC<NFTViewerCardProps> = ({ pairAddress }) => {
                   src={imageUri}
                   title="NFT Image"
                   className="w-full h-96"
-                  style={{ border: "none" }}
+                  style={{ border: "none", display: "block", margin: "0 auto" }}
                   onLoad={() => console.log("Iframe loaded successfully")}
                   onError={(e) => console.error("Iframe failed to load", e)}
                 />
